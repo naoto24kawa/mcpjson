@@ -236,7 +236,9 @@ func TestManager_updateTemplateArgs(t *testing.T) {
 			// テンプレートを元の状態にリセット
 			template.ServerConfig.Args = []string{"old-arg"}
 			
-			manager.updateTemplateArgs(template, tt.args)
+			// TemplateUpdaterを使用してテスト
+			updater := NewTemplateUpdater(manager.templateManager)
+			updater.UpdateTemplateArgs(template, tt.args)
 			
 			if len(template.ServerConfig.Args) != len(tt.expected) {
 				t.Errorf("引数の長さが期待値と異なります: got %d, want %d", len(template.ServerConfig.Args), len(tt.expected))
@@ -287,7 +289,9 @@ func TestManager_updateTemplateEnv(t *testing.T) {
 			// テンプレートを元の状態にリセット
 			template.ServerConfig.Env = map[string]string{"OLD_ENV": "old_value"}
 			
-			manager.updateTemplateEnv(template, tt.env)
+			// TemplateUpdaterを使用してテスト
+			updater := NewTemplateUpdater(manager.templateManager)
+			updater.UpdateTemplateEnv(template, tt.env)
 			
 			if len(template.ServerConfig.Env) != len(tt.expected) {
 				t.Errorf("環境変数の数が期待値と異なります: got %d, want %d", len(template.ServerConfig.Env), len(tt.expected))
