@@ -9,9 +9,18 @@ import (
 func TestNew(t *testing.T) {
 	// テスト用の一時ホームディレクトリを設定
 	tempDir := t.TempDir()
+	
+	// WindowsとUnixで環境変数を適切に設定
 	originalHome := os.Getenv("HOME")
+	originalUserProfile := os.Getenv("USERPROFILE")
+	
 	os.Setenv("HOME", tempDir)
-	defer os.Setenv("HOME", originalHome)
+	os.Setenv("USERPROFILE", tempDir)
+	
+	defer func() {
+		os.Setenv("HOME", originalHome)
+		os.Setenv("USERPROFILE", originalUserProfile)
+	}()
 
 	cfg, err := New()
 	if err != nil {
@@ -38,12 +47,16 @@ func TestNew(t *testing.T) {
 }
 
 func TestGetProfilePath(t *testing.T) {
+	// filepath.Joinを使用してOSに依存しないパスを作成
+	baseDir := filepath.Join("home", "user", ".mcpconfig")
+	profilesDir := filepath.Join(baseDir, "profiles")
+	
 	cfg := &Config{
-		ProfilesDir: "/home/user/.mcpconfig/profiles",
+		ProfilesDir: profilesDir,
 	}
 
 	got := cfg.GetProfilePath("test-profile")
-	want := "/home/user/.mcpconfig/profiles/test-profile.json"
+	want := filepath.Join(profilesDir, "test-profile.json")
 
 	if got != want {
 		t.Errorf("GetProfilePath() = %v, want %v", got, want)
@@ -51,12 +64,16 @@ func TestGetProfilePath(t *testing.T) {
 }
 
 func TestGetServerPath(t *testing.T) {
+	// filepath.Joinを使用してOSに依存しないパスを作成
+	baseDir := filepath.Join("home", "user", ".mcpconfig")
+	serversDir := filepath.Join(baseDir, "servers")
+	
 	cfg := &Config{
-		ServersDir: "/home/user/.mcpconfig/servers",
+		ServersDir: serversDir,
 	}
 
 	got := cfg.GetServerPath("test-server")
-	want := "/home/user/.mcpconfig/servers/test-server.json"
+	want := filepath.Join(serversDir, "test-server.json")
 
 	if got != want {
 		t.Errorf("GetServerPath() = %v, want %v", got, want)
