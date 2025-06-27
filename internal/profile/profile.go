@@ -231,7 +231,7 @@ func (m *Manager) Delete(name string, force bool) error {
 	if !force {
 		fmt.Printf("プロファイル '%s' を削除しますか？ (y/N): ", name)
 		var response string
-		fmt.Scanln(&response)
+		_, _ = fmt.Scanln(&response)
 		if strings.ToLower(response) != "y" {
 			fmt.Println("削除をキャンセルしました")
 			return nil
