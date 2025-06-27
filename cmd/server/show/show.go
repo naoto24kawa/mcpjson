@@ -1,0 +1,54 @@
+package show
+
+import (
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/naoto24kawa/mcpconfig/internal/config"
+	"github.com/naoto24kawa/mcpconfig/internal/server"
+	"github.com/naoto24kawa/mcpconfig/internal/utils"
+)
+
+func Execute(cfg *config.Config, args []string) {
+	var fromPath, serverName string
+
+	for i := 0; i < len(args); i++ {
+		switch args[i] {
+		case "--from", "-f":
+			if i+1 >= len(args) {
+				fmt.Fprintln(os.Stderr, "エラー: --from オプションに値が指定されていません")
+				os.Exit(utils.ExitArgumentError)
+			}
+			fromPath = args[i+1]
+			i++
+		case "--server", "-s":
+			if i+1 >= len(args) {
+				fmt.Fprintln(os.Stderr, "エラー: --server オプションに値が指定されていません")
+				os.Exit(utils.ExitArgumentError)
+			}
+			serverName = args[i+1]
+			i++
+		}
+	}
+
+	if fromPath == "" {
+		fmt.Fprintln(os.Stderr, "エラー: 対象のMCP設定ファイルパスが指定されていません")
+		fmt.Fprintln(os.Stderr, "使用方法: mcpconfig server show --from <パス> [--server <名前>]")
+		os.Exit(utils.ExitArgumentError)
+	}
+
+	if !utils.FileExists(fromPath) {
+		fmt.Fprintln(os.Stderr, "エラー: MCP設定ファイルが見つかりません:", fromPath)
+		os.Exit(utils.ExitFileError)
+	}
+
+	serverManager := server.NewManager(cfg.ServersDir)
+	if err := serverManager.Show(fromPath, serverName); err != nil {
+		fmt.Fprintln(os.Stderr, "エラー:", err)
+		if strings.Contains(err.Error(), "MCPサーバー") && strings.Contains(err.Error(), "見つかりません") {
+			os.Exit(utils.ExitServerError)
+		}
+		os.Exit(utils.ExitGeneralError)
+	}
+}
