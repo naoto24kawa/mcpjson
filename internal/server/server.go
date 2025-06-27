@@ -20,15 +20,21 @@ type ServerTemplate struct {
 }
 
 type ServerConfig struct {
-	Command string            `json:"command"`
-	Args    []string          `json:"args,omitempty"`
-	Env     map[string]string `json:"env,omitempty"`
+	Command       string            `json:"command"`
+	Args          []string          `json:"args,omitempty"`
+	Env           map[string]string `json:"env,omitempty"`
+	Timeout       *int              `json:"timeout,omitempty"`
+	EnvFile       *string           `json:"envFile,omitempty"`
+	TransportType *string           `json:"transportType,omitempty"`
 }
 
 type MCPServer struct {
-	Command string            `json:"command"`
-	Args    []string          `json:"args,omitempty"`
-	Env     map[string]string `json:"env,omitempty"`
+	Command       string            `json:"command"`
+	Args          []string          `json:"args,omitempty"`
+	Env           map[string]string `json:"env,omitempty"`
+	Timeout       *int              `json:"timeout,omitempty"`
+	EnvFile       *string           `json:"envFile,omitempty"`
+	TransportType *string           `json:"transportType,omitempty"`
 }
 
 type MCPConfig struct {
@@ -144,5 +150,10 @@ func (m *Manager) Exists(name string) (bool, error) {
 // SaveFromConfig saves a server template from MCPServer config
 func (m *Manager) SaveFromConfig(name string, server MCPServer) error {
 	return m.templateManager.SaveFromConfig(name, server)
+}
+
+// Reset deletes all server templates
+func (m *Manager) Reset(force bool) error {
+	return m.templateManager.Reset(force)
 }
 

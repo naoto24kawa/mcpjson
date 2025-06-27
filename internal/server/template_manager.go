@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/naoto24kawa/mcpconfig/internal/config"
@@ -174,4 +175,56 @@ func (tm *TemplateManager) exists(name string) bool {
 func (tm *TemplateManager) save(template *ServerTemplate) error {
 	templatePath := filepath.Join(tm.serversDir, template.Name+config.FileExtension)
 	return utils.SaveJSON(templatePath, template)
+}
+
+// Reset deletes all server templates
+func (tm *TemplateManager) Reset(force bool) error {
+	if _, err := os.Stat(tm.serversDir); os.IsNotExist(err) {
+		fmt.Println("サーバーテンプレートディレクトリが存在しません")
+		return nil
+	}
+	
+	files, err := os.ReadDir(tm.serversDir)
+	if err != nil {
+		return fmt.Errorf("サーバーテンプレートディレクトリの読み込みに失敗しました: %w", err)
+	}
+	
+	templateFiles := []string{}
+	for _, file := range files {
+		if strings.HasSuffix(file.Name(), config.FileExtension) {
+			templateFiles = append(templateFiles, file.Name())
+		}
+	}
+	
+	if len(templateFiles) == 0 {
+		fmt.Println("削除するサーバーテンプレートが存在しません")
+		return nil
+	}
+	
+	if !force {
+		fmt.Printf("以下の%d個のサーバーテンプレートを削除します:\n", len(templateFiles))
+		for _, file := range templateFiles {
+			name := strings.TrimSuffix(file, config.FileExtension)
+			fmt.Printf("  - %s\n", name)
+		}
+		fmt.Println()
+		
+		if !interaction.Confirm("すべてのサーバーテンプレートを削除しますか？") {
+			fmt.Println("リセットをキャンセルしました")
+			return nil
+		}
+	}
+	
+	deletedCount := 0
+	for _, file := range templateFiles {
+		templatePath := filepath.Join(tm.serversDir, file)
+		if err := os.Remove(templatePath); err != nil {
+			fmt.Printf("警告: %s の削除に失敗しました: %v\n", file, err)
+		} else {
+			deletedCount++
+		}
+	}
+	
+	fmt.Printf("サーバーテンプレートを%d個削除しました\n", deletedCount)
+	return nil
 }

@@ -65,7 +65,7 @@ mcpconfig save work-profile --from ~/.mcp.json
 #### 2. プロファイルを別の場所に適用
 
 ```bash
-mcpconfig apply work-profile --path ~/projects/myapp/.mcp.json
+mcpconfig apply work-profile --to ~/projects/myapp/.mcp.json
 ```
 
 #### 3. プロファイル一覧を確認
@@ -108,14 +108,14 @@ mcpconfig server add git-server --to prod-profile --env "GIT_REPO_PATH=/prod/rep
 mcpconfig server add api-server --to prod-profile --env "PORT=3000,DEBUG=false"
 
 # 本番環境に適用
-mcpconfig apply prod-profile --path /etc/claude/.mcp.json
+mcpconfig apply prod-profile --to /etc/claude/.mcp.json
 ```
 
 ## コマンドリファレンス
 
 ### プロファイル管理
 
-- `apply <name> --path <path>` - プロファイルを指定パスに適用
+- `apply <name> --to <path>` - プロファイルを指定パスに適用
 - `save <name> --from <path>` - 現在の設定をプロファイルとして保存
 - `create <name>` - 新規プロファイルを作成
 - `list [--detail]` - プロファイル一覧を表示

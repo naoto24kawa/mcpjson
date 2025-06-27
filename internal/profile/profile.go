@@ -362,5 +362,56 @@ func (m *Manager) RemoveServer(profileName, serverName string) error {
 	return nil
 }
 
+func (m *Manager) Reset(force bool) error {
+	if _, err := os.Stat(m.profilesDir); os.IsNotExist(err) {
+		fmt.Println("プロファイルディレクトリが存在しません")
+		return nil
+	}
+	
+	files, err := os.ReadDir(m.profilesDir)
+	if err != nil {
+		return fmt.Errorf("プロファイルディレクトリの読み込みに失敗しました: %w", err)
+	}
+	
+	profileFiles := []string{}
+	for _, file := range files {
+		if strings.HasSuffix(file.Name(), ".json") {
+			profileFiles = append(profileFiles, file.Name())
+		}
+	}
+	
+	if len(profileFiles) == 0 {
+		fmt.Println("削除するプロファイルが存在しません")
+		return nil
+	}
+	
+	if !force {
+		fmt.Printf("以下の%d個のプロファイルを削除します:\n", len(profileFiles))
+		for _, file := range profileFiles {
+			name := strings.TrimSuffix(file, ".json")
+			fmt.Printf("  - %s\n", name)
+		}
+		fmt.Println()
+		
+		if !interaction.Confirm("すべてのプロファイルを削除しますか？") {
+			fmt.Println("リセットをキャンセルしました")
+			return nil
+		}
+	}
+	
+	deletedCount := 0
+	for _, file := range profileFiles {
+		profilePath := filepath.Join(m.profilesDir, file)
+		if err := os.Remove(profilePath); err != nil {
+			fmt.Printf("警告: %s の削除に失敗しました: %v\n", file, err)
+		} else {
+			deletedCount++
+		}
+	}
+	
+	fmt.Printf("プロファイルを%d個削除しました\n", deletedCount)
+	return nil
+}
+
 
 

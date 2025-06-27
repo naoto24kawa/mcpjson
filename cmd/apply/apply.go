@@ -12,7 +12,7 @@ import (
 func Execute(args []string) {
 	if len(args) < 1 {
 		fmt.Fprintln(os.Stderr, "エラー: プロファイル名が指定されていません")
-		fmt.Fprintln(os.Stderr, "使用方法: mcpconfig apply <プロファイル名> --path <パス>")
+		fmt.Fprintln(os.Stderr, "使用方法: mcpconfig apply <プロファイル名> --to <パス>")
 		os.Exit(utils.ExitArgumentError)
 	}
 
@@ -21,9 +21,9 @@ func Execute(args []string) {
 
 	for i := 1; i < len(args); i++ {
 		switch args[i] {
-		case "--path", "-p":
+		case "--to", "-t":
 			if i+1 >= len(args) {
-				fmt.Fprintln(os.Stderr, "エラー: --path オプションに値が指定されていません")
+				fmt.Fprintln(os.Stderr, "エラー: --to オプションに値が指定されていません")
 				os.Exit(utils.ExitArgumentError)
 			}
 			targetPath = args[i+1]

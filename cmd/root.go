@@ -9,6 +9,7 @@ import (
 	"github.com/naoto24kawa/mcpconfig/cmd/delete"
 	"github.com/naoto24kawa/mcpconfig/cmd/list"
 	"github.com/naoto24kawa/mcpconfig/cmd/rename"
+	"github.com/naoto24kawa/mcpconfig/cmd/reset"
 	"github.com/naoto24kawa/mcpconfig/cmd/save"
 	"github.com/naoto24kawa/mcpconfig/cmd/server"
 	"github.com/naoto24kawa/mcpconfig/internal/config"
@@ -47,6 +48,8 @@ func Execute() {
 		rename.Execute(args)
 	case "server":
 		handleServer(args)
+	case "reset":
+		handleReset(args)
 	default:
 		fmt.Fprintf(os.Stderr, "エラー: 不明なコマンド '%s'\n", cmd)
 		printUsage()
@@ -61,13 +64,14 @@ func printUsage() {
   mcpconfig <コマンド> [オプション] [引数]
 
 コマンド:
-  apply <プロファイル名> --path <パス>     プロファイルを指定パスに適用
+  apply <プロファイル名> --to <パス>       プロファイルを指定パスに適用
   save <プロファイル名> --from <パス>      現在の設定をプロファイルとして保存
   create <プロファイル名>                   新規プロファイルを作成
   list [--detail]                          プロファイル一覧を表示
   delete <プロファイル名>                   プロファイルを削除
   rename <現在の名前> <新しい名前>          プロファイル名を変更
   server <サブコマンド>                     MCPサーバー管理
+  reset <サブコマンド>                      開発用設定のリセット
 
 グローバルオプション:
   --help, -h      ヘルプを表示
@@ -90,4 +94,19 @@ func handleServer(args []string) {
 	}
 
 	server.Execute(cfg, args)
+}
+
+func handleReset(args []string) {
+	if len(args) == 0 {
+		reset.PrintUsage()
+		os.Exit(0)
+	}
+
+	cfg, err := config.New()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "エラー:", err)
+		os.Exit(utils.ExitEnvironment)
+	}
+
+	reset.Execute(cfg, args)
 }
