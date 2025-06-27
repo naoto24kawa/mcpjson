@@ -3,6 +3,7 @@ __docs__
 CLAUDE.md
 .claude
 .vscode
+.tool-versions
 
 # Binaries for programs and plugins
 *.exe
