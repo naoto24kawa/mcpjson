@@ -157,3 +157,8 @@ func (m *Manager) Reset(force bool) error {
 	return m.templateManager.Reset(force)
 }
 
+// GetTemplatePath returns the file path for a server template
+func (m *Manager) GetTemplatePath(name string) (string, error) {
+	return m.templateManager.GetTemplatePath(name)
+}
+

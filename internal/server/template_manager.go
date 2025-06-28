@@ -76,10 +76,8 @@ func (tm *TemplateManager) SaveFromConfig(name string, server MCPServer) error {
 
 // Load loads a server template by name
 func (tm *TemplateManager) Load(name string) (*ServerTemplate, error) {
-	templatePath := filepath.Join(tm.serversDir, name+config.FileExtension)
-
 	template := &ServerTemplate{}
-	if err := utils.LoadJSON(templatePath, template); err != nil {
+	if err := utils.LoadJSON(tm.getTemplatePath(name), template); err != nil {
 		if os.IsNotExist(err) {
 			return nil, fmt.Errorf("サーバーテンプレート '%s' が見つかりません", name)
 		}
@@ -96,7 +94,7 @@ func (tm *TemplateManager) Exists(name string) (bool, error) {
 
 // Delete deletes a server template
 func (tm *TemplateManager) Delete(name string, force bool) error {
-	templatePath := filepath.Join(tm.serversDir, name+config.FileExtension)
+	templatePath := tm.getTemplatePath(name)
 
 	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
 		return fmt.Errorf("サーバーテンプレート '%s' が見つかりません", name)
@@ -137,8 +135,8 @@ func (tm *TemplateManager) Rename(oldName, newName string, force bool) error {
 }
 
 func (tm *TemplateManager) validateRename(oldName, newName string, force bool) error {
-	oldPath := filepath.Join(tm.serversDir, oldName+config.FileExtension)
-	newPath := filepath.Join(tm.serversDir, newName+config.FileExtension)
+	oldPath := tm.getTemplatePath(oldName)
+	newPath := tm.getTemplatePath(newName)
 
 	if _, err := os.Stat(oldPath); os.IsNotExist(err) {
 		return fmt.Errorf("サーバーテンプレート '%s' が見つかりません", oldName)
@@ -158,23 +156,35 @@ func (tm *TemplateManager) performRename(template *ServerTemplate, oldName, newN
 		return err
 	}
 
-	oldPath := filepath.Join(tm.serversDir, oldName+config.FileExtension)
-	if err := os.Remove(oldPath); err != nil {
+	if err := os.Remove(tm.getTemplatePath(oldName)); err != nil {
 		return fmt.Errorf("古いサーバーテンプレートの削除に失敗しました: %w", err)
 	}
 
 	return nil
 }
 
+// GetTemplatePath returns the file path for a server template
+func (tm *TemplateManager) GetTemplatePath(name string) (string, error) {
+	templatePath := tm.getTemplatePath(name)
+	
+	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
+		return "", fmt.Errorf("サーバーテンプレート '%s' が見つかりません", name)
+	}
+	
+	return templatePath, nil
+}
+
+func (tm *TemplateManager) getTemplatePath(name string) string {
+	return filepath.Join(tm.serversDir, name+config.FileExtension)
+}
+
 func (tm *TemplateManager) exists(name string) bool {
-	templatePath := filepath.Join(tm.serversDir, name+config.FileExtension)
-	_, err := os.Stat(templatePath)
+	_, err := os.Stat(tm.getTemplatePath(name))
 	return err == nil
 }
 
 func (tm *TemplateManager) save(template *ServerTemplate) error {
-	templatePath := filepath.Join(tm.serversDir, template.Name+config.FileExtension)
-	return utils.SaveJSON(templatePath, template)
+	return utils.SaveJSON(tm.getTemplatePath(template.Name), template)
 }
 
 // Reset deletes all server templates

@@ -407,6 +407,16 @@ func (m *Manager) RemoveServer(profileName, serverName string) error {
 	return nil
 }
 
+func (m *Manager) GetProfilePath(name string) (string, error) {
+	profilePath := m.getProfilePath(name)
+	
+	if _, err := os.Stat(profilePath); os.IsNotExist(err) {
+		return "", fmt.Errorf("プロファイル '%s' が見つかりません", name)
+	}
+	
+	return profilePath, nil
+}
+
 func (m *Manager) Reset(force bool) error {
 	if _, err := os.Stat(m.profilesDir); os.IsNotExist(err) {
 		fmt.Println("プロファイルディレクトリが存在しません")

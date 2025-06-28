@@ -45,3 +45,8 @@ func Rename(cfg *config.Config, oldName, newName string, force bool) error {
 	profileManager := profile.NewManager(cfg.ProfilesDir)
 	return profileManager.Rename(oldName, newName, force)
 }
+
+func GetProfilePath(cfg *config.Config, profileName string) (string, error) {
+	profileManager := profile.NewManager(cfg.ProfilesDir)
+	return profileManager.GetProfilePath(profileName)
+}

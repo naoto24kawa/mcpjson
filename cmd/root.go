@@ -8,10 +8,12 @@ import (
 	"github.com/naoto24kawa/mcpconfig/cmd/create"
 	"github.com/naoto24kawa/mcpconfig/cmd/delete"
 	"github.com/naoto24kawa/mcpconfig/cmd/list"
+	"github.com/naoto24kawa/mcpconfig/cmd/path"
 	"github.com/naoto24kawa/mcpconfig/cmd/rename"
 	"github.com/naoto24kawa/mcpconfig/cmd/reset"
 	"github.com/naoto24kawa/mcpconfig/cmd/save"
 	"github.com/naoto24kawa/mcpconfig/cmd/server"
+	serverpath "github.com/naoto24kawa/mcpconfig/cmd/server-path"
 	"github.com/naoto24kawa/mcpconfig/internal/config"
 	"github.com/naoto24kawa/mcpconfig/internal/utils"
 )
@@ -50,6 +52,18 @@ func Execute() {
 		handleServer(args)
 	case "reset":
 		handleReset(args)
+	case "path":
+		path.PathCmd.SetArgs(args)
+		if err := path.PathCmd.Execute(); err != nil {
+			fmt.Fprintln(os.Stderr, "エラー:", err)
+			os.Exit(utils.ExitGeneralError)
+		}
+	case "server-path":
+		serverpath.ServerPathCmd.SetArgs(args)
+		if err := serverpath.ServerPathCmd.Execute(); err != nil {
+			fmt.Fprintln(os.Stderr, "エラー:", err)
+			os.Exit(utils.ExitGeneralError)
+		}
 	default:
 		fmt.Fprintf(os.Stderr, "エラー: 不明なコマンド '%s'\n", cmd)
 		printUsage()
@@ -70,7 +84,9 @@ func printUsage() {
   list [--detail]                           プロファイル一覧を表示
   delete [プロファイル名]                    プロファイルを削除 (デフォルト: %s)
   rename [現在の名前] <新しい名前>           プロファイル名を変更 (デフォルト: %s)
+  path [プロファイル名]                      プロファイルファイルのパスを表示 (デフォルト: %s)
   server <サブコマンド>                      MCPサーバー管理
+  server-path <テンプレート名>               サーバーテンプレートファイルのパスを表示
   reset <サブコマンド>                       開発用設定のリセット
 
 注意: []で囲まれた引数は省略可能で、省略時はデフォルトプロファイル名 '%s' が使用されます
@@ -85,6 +101,7 @@ func printUsage() {
 		config.DefaultProfileName, 
 		config.DefaultProfileName, 
 		config.DefaultProfileName, 
+		config.DefaultProfileName,
 		config.DefaultProfileName)
 }
 
