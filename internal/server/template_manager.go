@@ -12,6 +12,12 @@ import (
 	"github.com/naoto24kawa/mcpconfig/internal/utils"
 )
 
+// ProfileManager インターフェースはプロファイル管理機能を抽象化します
+type ProfileManager interface {
+	FindProfilesUsingTemplate(templateName string) ([]string, error)
+	RemoveTemplateReferencesFromAllProfiles(templateName string) error
+}
+
 // TemplateManager handles server template CRUD operations
 type TemplateManager struct {
 	serversDir string
@@ -93,17 +99,55 @@ func (tm *TemplateManager) Exists(name string) (bool, error) {
 }
 
 // Delete deletes a server template
-func (tm *TemplateManager) Delete(name string, force bool) error {
+func (tm *TemplateManager) Delete(name string, force bool, profileManager ProfileManager) error {
 	templatePath := tm.getTemplatePath(name)
 
 	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
 		return fmt.Errorf("サーバーテンプレート '%s' が見つかりません", name)
 	}
 
+	// プロファイルでの使用状況をチェック
+	var usingProfiles []string
+	if profileManager != nil {
+		var err error
+		usingProfiles, err = profileManager.FindProfilesUsingTemplate(name)
+		if err != nil {
+			return fmt.Errorf("プロファイルでの使用状況確認に失敗しました: %w", err)
+		}
+	}
+
+	// 使用中のプロファイルがある場合の警告と削除確認
+	if len(usingProfiles) > 0 {
+		fmt.Printf("警告: サーバーテンプレート '%s' は以下のプロファイルで使用されています:\n", name)
+		for _, profileName := range usingProfiles {
+			fmt.Printf("  - %s\n", profileName)
+		}
+		fmt.Println()
+	}
+
+	// 削除確認
 	if !force {
 		if !interaction.Confirm(fmt.Sprintf("サーバーテンプレート '%s' を削除しますか？", name)) {
 			fmt.Println("削除をキャンセルしました")
 			return nil
+		}
+	}
+
+	// プロファイルからの参照削除処理
+	if len(usingProfiles) > 0 && profileManager != nil {
+		if !force {
+			// 通常削除の場合、プロファイルからの参照も削除するか確認
+			if interaction.Confirm("プロファイルからの参照も削除しますか？") {
+				if err := profileManager.RemoveTemplateReferencesFromAllProfiles(name); err != nil {
+					fmt.Printf("警告: プロファイルからの参照削除に失敗しました: %v\n", err)
+				}
+			}
+		} else {
+			// 強制削除の場合、プロファイルからの参照も自動削除
+			fmt.Println("強制削除: プロファイルからの参照も削除します")
+			if err := profileManager.RemoveTemplateReferencesFromAllProfiles(name); err != nil {
+				fmt.Printf("警告: プロファイルからの参照削除に失敗しました: %v\n", err)
+			}
 		}
 	}
 

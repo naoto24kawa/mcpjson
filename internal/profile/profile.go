@@ -468,5 +468,93 @@ func (m *Manager) Reset(force bool) error {
 	return nil
 }
 
+// FindProfilesUsingTemplate は指定されたサーバーテンプレートを使用しているプロファイルを検索します
+func (m *Manager) FindProfilesUsingTemplate(templateName string) ([]string, error) {
+	files, err := os.ReadDir(m.profilesDir)
+	if err != nil {
+		return nil, fmt.Errorf("プロファイルディレクトリの読み込みに失敗しました: %w", err)
+	}
+	
+	var usingProfiles []string
+	
+	for _, file := range files {
+		if !strings.HasSuffix(file.Name(), config.FileExtension) {
+			continue
+		}
+		
+		profileName := strings.TrimSuffix(file.Name(), config.FileExtension)
+		profile, err := m.Load(profileName)
+		if err != nil {
+			continue // 読み込みに失敗したプロファイルはスキップ
+		}
+		
+		// プロファイル内のサーバーで指定されたテンプレートを使用しているかチェック
+		for _, server := range profile.Servers {
+			if server.Template == templateName {
+				usingProfiles = append(usingProfiles, profileName)
+				break // 同じプロファイル内で複数使用されていても一度だけ追加
+			}
+		}
+	}
+	
+	return usingProfiles, nil
+}
+
+// RemoveTemplateReferencesFromProfile は指定されたプロファイルから特定のサーバーテンプレート参照を削除します
+func (m *Manager) RemoveTemplateReferencesFromProfile(profileName, templateName string) error {
+	profile, err := m.Load(profileName)
+	if err != nil {
+		return err
+	}
+	
+	newServers := []ServerRef{}
+	removedCount := 0
+	
+	for _, server := range profile.Servers {
+		if server.Template != templateName {
+			newServers = append(newServers, server)
+		} else {
+			removedCount++
+		}
+	}
+	
+	if removedCount == 0 {
+		return nil // 削除対象がない場合は何もしない
+	}
+	
+	profile.Servers = newServers
+	profile.UpdatedAt = time.Now()
+	
+	if err := m.saveProfile(profile); err != nil {
+		return err
+	}
+	
+	fmt.Printf("プロファイル '%s' からサーバーテンプレート '%s' の参照を%d個削除しました\n", profileName, templateName, removedCount)
+	return nil
+}
+
+// RemoveTemplateReferencesFromAllProfiles はすべてのプロファイルから特定のサーバーテンプレート参照を削除します
+func (m *Manager) RemoveTemplateReferencesFromAllProfiles(templateName string) error {
+	usingProfiles, err := m.FindProfilesUsingTemplate(templateName)
+	if err != nil {
+		return err
+	}
+	
+	totalRemoved := 0
+	for _, profileName := range usingProfiles {
+		if err := m.RemoveTemplateReferencesFromProfile(profileName, templateName); err != nil {
+			fmt.Printf("警告: プロファイル '%s' からの参照削除に失敗しました: %v\n", profileName, err)
+		} else {
+			totalRemoved++
+		}
+	}
+	
+	if totalRemoved > 0 {
+		fmt.Printf("合計%d個のプロファイルからサーバーテンプレート '%s' の参照を削除しました\n", totalRemoved, templateName)
+	}
+	
+	return nil
+}
+
 
 

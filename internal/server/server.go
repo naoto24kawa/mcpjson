@@ -75,8 +75,8 @@ func (m *Manager) List(detail bool) error {
 }
 
 // Delete deletes a server template
-func (m *Manager) Delete(name string, force bool) error {
-	return m.templateManager.Delete(name, force)
+func (m *Manager) Delete(name string, force bool, profileManager ProfileManager) error {
+	return m.templateManager.Delete(name, force, profileManager)
 }
 
 // Rename renames a server template
