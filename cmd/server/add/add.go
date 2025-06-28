@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/naoto24kawa/mcpconfig/internal/config"
-	"github.com/naoto24kawa/mcpconfig/internal/profile"
+	"github.com/naoto24kawa/mcpconfig/internal/server"
 	"github.com/naoto24kawa/mcpconfig/internal/utils"
 )
 
@@ -16,7 +16,7 @@ func Execute(cfg *config.Config, args []string) {
 	}
 
 	templateName := args[0]
-	var profileName, serverName, envStr string
+	var mcpConfigPath, serverName, envStr string
 
 	for i := 1; i < len(args); i++ {
 		switch args[i] {
@@ -25,7 +25,7 @@ func Execute(cfg *config.Config, args []string) {
 				fmt.Fprintln(os.Stderr, "エラー: --to オプションに値が指定されていません")
 				os.Exit(utils.ExitArgumentError)
 			}
-			profileName = args[i+1]
+			mcpConfigPath = args[i+1]
 			i++
 		case "--as", "-a":
 			if i+1 >= len(args) {
@@ -44,17 +44,12 @@ func Execute(cfg *config.Config, args []string) {
 		}
 	}
 
-	if profileName == "" {
-		profileName = config.DefaultProfileName
-		fmt.Printf("プロファイル名が指定されていないため、デフォルト '%s' を使用します\n", profileName)
+	// --to が未指定の場合、デフォルトで ./.mcp.json を使用
+	if mcpConfigPath == "" {
+		mcpConfigPath = "./.mcp.json"
 	}
 
 	if err := utils.ValidateName(templateName, "サーバーテンプレート"); err != nil {
-		fmt.Fprintln(os.Stderr, "エラー:", err)
-		os.Exit(utils.ExitArgumentError)
-	}
-
-	if err := utils.ValidateName(profileName, "プロファイル"); err != nil {
 		fmt.Fprintln(os.Stderr, "エラー:", err)
 		os.Exit(utils.ExitArgumentError)
 	}
@@ -69,8 +64,8 @@ func Execute(cfg *config.Config, args []string) {
 		envOverrides = parsedEnv
 	}
 
-	profileManager := profile.NewManager(cfg.ProfilesDir)
-	if err := profileManager.AddServer(profileName, templateName, serverName, envOverrides); err != nil {
+	serverManager := server.NewManager(cfg.ServersDir)
+	if err := serverManager.AddToMCPConfig(mcpConfigPath, templateName, serverName, envOverrides); err != nil {
 		fmt.Fprintln(os.Stderr, "エラー:", err)
 		os.Exit(utils.ExitGeneralError)
 	}

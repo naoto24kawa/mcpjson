@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/naoto24kawa/mcpconfig/internal/config"
-	"github.com/naoto24kawa/mcpconfig/internal/profile"
+	"github.com/naoto24kawa/mcpconfig/internal/server"
 	"github.com/naoto24kawa/mcpconfig/internal/utils"
 )
 
@@ -16,7 +16,7 @@ func Execute(cfg *config.Config, args []string) {
 	}
 
 	serverName := args[0]
-	var profileName string
+	var mcpConfigPath string
 
 	for i := 1; i < len(args); i++ {
 		switch args[i] {
@@ -25,23 +25,18 @@ func Execute(cfg *config.Config, args []string) {
 				fmt.Fprintln(os.Stderr, "エラー: --from オプションに値が指定されていません")
 				os.Exit(utils.ExitArgumentError)
 			}
-			profileName = args[i+1]
+			mcpConfigPath = args[i+1]
 			i++
 		}
 	}
 
-	if profileName == "" {
-		profileName = config.DefaultProfileName
-		fmt.Printf("プロファイル名が指定されていないため、デフォルト '%s' を使用します\n", profileName)
+	// --from が未指定の場合、デフォルトで ./.mcp.json を使用
+	if mcpConfigPath == "" {
+		mcpConfigPath = "./.mcp.json"
 	}
 
-	if err := utils.ValidateName(profileName, "プロファイル"); err != nil {
-		fmt.Fprintln(os.Stderr, "エラー:", err)
-		os.Exit(utils.ExitArgumentError)
-	}
-
-	profileManager := profile.NewManager(cfg.ProfilesDir)
-	if err := profileManager.RemoveServer(profileName, serverName); err != nil {
+	serverManager := server.NewManager(cfg.ServersDir)
+	if err := serverManager.RemoveFromMCPConfig(mcpConfigPath, serverName); err != nil {
 		fmt.Fprintln(os.Stderr, "エラー:", err)
 		os.Exit(utils.ExitGeneralError)
 	}

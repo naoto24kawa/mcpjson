@@ -32,10 +32,9 @@ func Execute(cfg *config.Config, args []string) {
 		}
 	}
 
+	// --from が未指定の場合、デフォルトで ./.mcp.json を使用
 	if fromPath == "" {
-		fmt.Fprintln(os.Stderr, "エラー: 対象のMCP設定ファイルパスが指定されていません")
-		fmt.Fprintln(os.Stderr, "使用方法: mcpconfig server show --from <パス> [--server <名前>]")
-		os.Exit(utils.ExitArgumentError)
+		fromPath = "./.mcp.json"
 	}
 
 	if !utils.FileExists(fromPath) {

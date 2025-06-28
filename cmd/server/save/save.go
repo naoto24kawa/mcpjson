@@ -73,6 +73,11 @@ func Execute(cfg *config.Config, args []string) {
 		os.Exit(utils.ExitArgumentError)
 	}
 
+	// --from が未指定の場合、デフォルトで ./.mcp.json を使用
+	if fromPath == "" && serverName != "" {
+		fromPath = "./.mcp.json"
+	}
+
 	serverManager := server.NewManager(cfg.ServersDir)
 
 	if fromPath != "" && serverName != "" {
