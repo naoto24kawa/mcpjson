@@ -45,9 +45,8 @@ func Execute(cfg *config.Config, args []string) {
 	}
 
 	if profileName == "" {
-		fmt.Fprintln(os.Stderr, "エラー: 追加先のプロファイル名が指定されていません")
-		fmt.Fprintln(os.Stderr, "使用方法: mcpconfig server add <テンプレート名> --to <プロファイル名>")
-		os.Exit(utils.ExitArgumentError)
+		profileName = config.DefaultProfileName
+		fmt.Printf("プロファイル名が指定されていないため、デフォルト '%s' を使用します\n", profileName)
 	}
 
 	if err := utils.ValidateName(templateName, "サーバーテンプレート"); err != nil {

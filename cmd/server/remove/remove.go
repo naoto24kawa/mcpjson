@@ -31,9 +31,8 @@ func Execute(cfg *config.Config, args []string) {
 	}
 
 	if profileName == "" {
-		fmt.Fprintln(os.Stderr, "エラー: 削除元のプロファイル名が指定されていません")
-		fmt.Fprintln(os.Stderr, "使用方法: mcpconfig server remove <サーバー名> --from <プロファイル名>")
-		os.Exit(utils.ExitArgumentError)
+		profileName = config.DefaultProfileName
+		fmt.Printf("プロファイル名が指定されていないため、デフォルト '%s' を使用します\n", profileName)
 	}
 
 	if err := utils.ValidateName(profileName, "プロファイル"); err != nil {

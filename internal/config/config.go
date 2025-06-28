@@ -7,13 +7,14 @@ import (
 )
 
 const (
-	ConfigDirName    = ".mcpconfig"
-	ProfilesDir      = "profiles"
-	ServersDir       = "servers"
-	DefaultHomeEnv   = "HOME"
-	DefaultMCPConfig = ".mcp.json"
-	DefaultDirPerm   = 0755
-	FileExtension    = ".json"
+	ConfigDirName       = ".mcpconfig"
+	ProfilesDir         = "profiles"
+	ServersDir          = "servers"
+	DefaultHomeEnv      = "HOME"
+	DefaultMCPConfig    = ".mcp.json"
+	DefaultDirPerm      = 0755
+	FileExtension       = ".json"
+	DefaultProfileName  = "default"
 )
 
 type Config struct {

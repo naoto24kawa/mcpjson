@@ -306,3 +306,99 @@ func TestManager_updateTemplateEnv(t *testing.T) {
 		})
 	}
 }
+
+func TestManager_Reset_EmptyDirectory(t *testing.T) {
+	// Arrange
+	tempDir := t.TempDir()
+	manager := NewManager(tempDir)
+	
+	// Act
+	err := manager.Reset(true)
+	
+	// Assert
+	if err != nil {
+		t.Errorf("Manager.Reset() on empty directory failed: %v", err)
+	}
+}
+
+func TestManager_Reset_NonexistentDirectory(t *testing.T) {
+	// Arrange
+	nonexistentDir := filepath.Join(os.TempDir(), "nonexistent-server-dir")
+	manager := NewManager(nonexistentDir)
+	
+	// Act
+	err := manager.Reset(true)
+	
+	// Assert
+	if err != nil {
+		t.Errorf("Manager.Reset() on nonexistent directory failed: %v", err)
+	}
+}
+
+func TestManager_Reset_MultipleTemplates(t *testing.T) {
+	// Arrange
+	tempDir := t.TempDir()
+	manager := NewManager(tempDir)
+	
+	// 複数のテンプレートを作成
+	templateNames := []string{"template1", "template2", "template3"}
+	for _, name := range templateNames {
+		err := manager.SaveManual(name, "test-command", []string{"test.py"}, nil, false)
+		if err != nil {
+			t.Fatalf("Failed to create test template %s: %v", name, err)
+		}
+	}
+	
+	// Act
+	err := manager.Reset(true)
+	
+	// Assert
+	if err != nil {
+		t.Errorf("Manager.Reset() with multiple templates failed: %v", err)
+	}
+	
+	// すべてのテンプレートが削除されているか確認
+	for _, name := range templateNames {
+		exists, _ := manager.Exists(name)
+		if exists {
+			t.Errorf("Template %s still exists after reset", name)
+		}
+	}
+}
+
+func TestManager_Reset_WithNonTemplateFiles(t *testing.T) {
+	// Arrange
+	tempDir := t.TempDir()
+	manager := NewManager(tempDir)
+	
+	// テンプレートファイルを作成
+	err := manager.SaveManual("test-template", "test-command", []string{"test.py"}, nil, false)
+	if err != nil {
+		t.Fatalf("Failed to create test template: %v", err)
+	}
+	
+	// テンプレートファイル以外のファイルを作成
+	nonTemplateFile := filepath.Join(tempDir, "not-a-template.txt")
+	if err := os.WriteFile(nonTemplateFile, []byte("test"), 0644); err != nil {
+		t.Fatalf("Failed to create non-template file: %v", err)
+	}
+	
+	// Act
+	err = manager.Reset(true)
+	
+	// Assert
+	if err != nil {
+		t.Errorf("Manager.Reset() failed: %v", err)
+	}
+	
+	// テンプレートファイルが削除されているか確認
+	exists, _ := manager.Exists("test-template")
+	if exists {
+		t.Error("Template still exists after reset")
+	}
+	
+	// 非テンプレートファイルが残っているか確認
+	if _, err := os.Stat(nonTemplateFile); os.IsNotExist(err) {
+		t.Error("Non-template file was unexpectedly deleted")
+	}
+}

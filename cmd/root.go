@@ -58,26 +58,34 @@ func Execute() {
 }
 
 func printUsage() {
-	fmt.Println(`mcpconfig - MCP設定ファイル管理ツール
+	fmt.Printf(`mcpconfig - MCP設定ファイル管理ツール
 
 使用方法:
   mcpconfig <コマンド> [オプション] [引数]
 
 コマンド:
-  apply <プロファイル名> --to <パス>       プロファイルを指定パスに適用
-  save <プロファイル名> --from <パス>      現在の設定をプロファイルとして保存
-  create <プロファイル名>                   新規プロファイルを作成
-  list [--detail]                          プロファイル一覧を表示
-  delete <プロファイル名>                   プロファイルを削除
-  rename <現在の名前> <新しい名前>          プロファイル名を変更
-  server <サブコマンド>                     MCPサーバー管理
-  reset <サブコマンド>                      開発用設定のリセット
+  apply [プロファイル名] --to <パス>         プロファイルを指定パスに適用 (デフォルト: %s)
+  save [プロファイル名] --from <パス>        現在の設定をプロファイルとして保存 (デフォルト: %s)
+  create [プロファイル名]                    新規プロファイルを作成 (デフォルト: %s)
+  list [--detail]                           プロファイル一覧を表示
+  delete [プロファイル名]                    プロファイルを削除 (デフォルト: %s)
+  rename [現在の名前] <新しい名前>           プロファイル名を変更 (デフォルト: %s)
+  server <サブコマンド>                      MCPサーバー管理
+  reset <サブコマンド>                       開発用設定のリセット
+
+注意: []で囲まれた引数は省略可能で、省略時はデフォルトプロファイル名 '%s' が使用されます
 
 グローバルオプション:
   --help, -h      ヘルプを表示
   --version, -v   バージョンを表示
 
-詳細は 'mcpconfig help <コマンド>' で確認してください`)
+詳細は 'mcpconfig help <コマンド>' で確認してください`, 
+		config.DefaultProfileName, 
+		config.DefaultProfileName, 
+		config.DefaultProfileName, 
+		config.DefaultProfileName, 
+		config.DefaultProfileName, 
+		config.DefaultProfileName)
 }
 
 
