@@ -7,6 +7,7 @@ import (
 	"github.com/naoto24kawa/mcpconfig/cmd/apply"
 	"github.com/naoto24kawa/mcpconfig/cmd/create"
 	"github.com/naoto24kawa/mcpconfig/cmd/delete"
+	"github.com/naoto24kawa/mcpconfig/cmd/detail"
 	"github.com/naoto24kawa/mcpconfig/cmd/list"
 	"github.com/naoto24kawa/mcpconfig/cmd/path"
 	"github.com/naoto24kawa/mcpconfig/cmd/rename"
@@ -48,6 +49,11 @@ func Execute() {
 		delete.Execute(args)
 	case "rename":
 		rename.Execute(args)
+	case "detail":
+		if err := detail.Execute(args); err != nil {
+			fmt.Fprintln(os.Stderr, "エラー:", err)
+			os.Exit(utils.ExitGeneralError)
+		}
 	case "server":
 		handleServer(args)
 	case "reset":
@@ -85,6 +91,8 @@ func printUsage() {
   delete [プロファイル名]                    プロファイルを削除 (デフォルト: %s)
   rename [現在の名前] <新しい名前>           プロファイル名を変更 (デフォルト: %s)
   path [プロファイル名]                      プロファイルファイルのパスを表示 (デフォルト: %s)
+  detail <プロファイル名>                    プロファイルの詳細を表示
+  detail server <サーバー名>                サーバーテンプレートの詳細を表示
   server <サブコマンド>                      MCPサーバー管理
   server-path <テンプレート名>               サーバーテンプレートファイルのパスを表示
   reset <サブコマンド>                       開発用設定のリセット
