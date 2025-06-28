@@ -202,7 +202,7 @@ func TestIntegration_ProfileAndServerWorkflow(t *testing.T) {
 		}
 
 		// サーバーテンプレートを削除
-		err = serverManager.Delete("test-server", true)
+		err = serverManager.Delete("test-server", true, nil)
 		if err != nil {
 			t.Errorf("サーバーテンプレート削除に失敗: %v", err)
 		}

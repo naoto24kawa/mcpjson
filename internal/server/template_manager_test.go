@@ -239,7 +239,7 @@ func TestTemplateManager_Delete_Success(t *testing.T) {
 	createTestTemplate(t, manager, testTemplateName)
 	
 	// Act
-	err := manager.Delete(testTemplateName, true) // force=true to skip confirmation
+	err := manager.Delete(testTemplateName, true, nil) // force=true to skip confirmation
 	
 	// Assert
 	if err != nil {
@@ -259,7 +259,7 @@ func TestTemplateManager_Delete_NotFound(t *testing.T) {
 	manager := NewTemplateManager(tempDir)
 	
 	// Act
-	err := manager.Delete("nonexistent-template", true)
+	err := manager.Delete("nonexistent-template", true, nil)
 	
 	// Assert
 	if err == nil {

@@ -16,7 +16,7 @@ import (
 
 const (
 	ListColumnWidth     = 20
-	TimestampFormat     = "2006-01-02 15:04:05"
+	TimestampFormat     = time.RFC3339
 	TableSeparatorChar  = "-"
 	TableSeparatorWidth = 60
 )
@@ -75,20 +75,24 @@ func (m *Manager) Save(name string, mcpConfigPath string, serverManager *server.
 		return err
 	}
 	
-	fmt.Printf("プロファイル '%s' を保存しました (%d個のサーバー)\n", name, len(profile.Servers))
+	m.printSaveSuccess(name, len(profile.Servers))
 	return nil
+}
+
+func (m *Manager) printSaveSuccess(name string, serverCount int) {
+	fmt.Printf("プロファイル '%s' を保存しました (%d個のサーバー)\n", name, serverCount)
 }
 
 func (m *Manager) buildProfileFromMCP(name, mcpConfigPath string, serverManager *server.Manager) (*Profile, error) {
 	mcpConfig, err := m.loadMCPConfig(mcpConfigPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("MCP設定の読み込みに失敗: %w", err)
 	}
 	
 	profile := m.createProfileFromMCP(name, mcpConfigPath)
 	
 	if err := m.processServers(profile, mcpConfig, serverManager); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("サーバー処理に失敗: %w", err)
 	}
 	
 	return profile, nil
@@ -381,18 +385,9 @@ func (m *Manager) RemoveServer(profileName, serverName string) error {
 		return err
 	}
 	
-	found := false
-	newServers := []ServerRef{}
+	newServers, removedCount := m.filterServersByName(profile.Servers, serverName)
 	
-	for _, server := range profile.Servers {
-		if server.Name != serverName {
-			newServers = append(newServers, server)
-		} else {
-			found = true
-		}
-	}
-	
-	if !found {
+	if removedCount == 0 {
 		return fmt.Errorf("サーバー '%s' がプロファイル '%s' に見つかりません", serverName, profileName)
 	}
 	
@@ -405,6 +400,21 @@ func (m *Manager) RemoveServer(profileName, serverName string) error {
 	
 	fmt.Printf("サーバー '%s' をプロファイル '%s' から削除しました\n", serverName, profileName)
 	return nil
+}
+
+func (m *Manager) filterServersByName(servers []ServerRef, serverName string) ([]ServerRef, int) {
+	newServers := []ServerRef{}
+	removedCount := 0
+	
+	for _, server := range servers {
+		if server.Name != serverName {
+			newServers = append(newServers, server)
+		} else {
+			removedCount++
+		}
+	}
+	
+	return newServers, removedCount
 }
 
 func (m *Manager) GetProfilePath(name string) (string, error) {
@@ -507,19 +517,10 @@ func (m *Manager) RemoveTemplateReferencesFromProfile(profileName, templateName 
 		return err
 	}
 	
-	newServers := []ServerRef{}
-	removedCount := 0
-	
-	for _, server := range profile.Servers {
-		if server.Template != templateName {
-			newServers = append(newServers, server)
-		} else {
-			removedCount++
-		}
-	}
+	newServers, removedCount := m.filterServersByTemplate(profile.Servers, templateName)
 	
 	if removedCount == 0 {
-		return nil // 削除対象がない場合は何もしない
+		return nil
 	}
 	
 	profile.Servers = newServers
@@ -531,6 +532,21 @@ func (m *Manager) RemoveTemplateReferencesFromProfile(profileName, templateName 
 	
 	fmt.Printf("プロファイル '%s' からサーバーテンプレート '%s' の参照を%d個削除しました\n", profileName, templateName, removedCount)
 	return nil
+}
+
+func (m *Manager) filterServersByTemplate(servers []ServerRef, templateName string) ([]ServerRef, int) {
+	newServers := []ServerRef{}
+	removedCount := 0
+	
+	for _, server := range servers {
+		if server.Template != templateName {
+			newServers = append(newServers, server)
+		} else {
+			removedCount++
+		}
+	}
+	
+	return newServers, removedCount
 }
 
 // RemoveTemplateReferencesFromAllProfiles はすべてのプロファイルから特定のサーバーテンプレート参照を削除します

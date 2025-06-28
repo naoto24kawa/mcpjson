@@ -56,7 +56,7 @@ func TestGetProfilePath(t *testing.T) {
 	}
 
 	got := cfg.GetProfilePath("test-profile")
-	want := filepath.Join(profilesDir, "test-profile.json")
+	want := filepath.Join(profilesDir, "test-profile.jsonc")
 
 	if got != want {
 		t.Errorf("GetProfilePath() = %v, want %v", got, want)
@@ -73,7 +73,7 @@ func TestGetServerPath(t *testing.T) {
 	}
 
 	got := cfg.GetServerPath("test-server")
-	want := filepath.Join(serversDir, "test-server.json")
+	want := filepath.Join(serversDir, "test-server.jsonc")
 
 	if got != want {
 		t.Errorf("GetServerPath() = %v, want %v", got, want)

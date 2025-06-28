@@ -33,7 +33,7 @@ func showProfileDetail(profileName string) error {
 		return fmt.Errorf("設定の初期化に失敗しました: %v", err)
 	}
 
-	profilePath := filepath.Join(cfg.ProfilesDir, profileName+".json")
+	profilePath := filepath.Join(cfg.ProfilesDir, profileName+config.FileExtension)
 	if _, err := os.Stat(profilePath); os.IsNotExist(err) {
 		return fmt.Errorf("プロファイル '%s' が見つかりません", profileName)
 	}
@@ -58,7 +58,7 @@ func showServerDetail(serverName string) error {
 		return fmt.Errorf("設定の初期化に失敗しました: %v", err)
 	}
 
-	templatePath := filepath.Join(cfg.ServersDir, serverName+".json")
+	templatePath := filepath.Join(cfg.ServersDir, serverName+config.FileExtension)
 	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
 		return fmt.Errorf("サーバーテンプレート '%s' が見つかりません", serverName)
 	}

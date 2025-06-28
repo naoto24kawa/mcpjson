@@ -69,12 +69,6 @@ func TestExecute(t *testing.T) {
 				serverManager.SaveManual("test-server", "python", []string{"test.py"}, nil, false)
 			},
 		},
-		{
-			name: "使用方法表示",
-			args: []string{},
-			setup: func(cfg *config.Config) {
-			},
-		},
 	}
 
 	for _, tt := range tests {

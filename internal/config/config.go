@@ -13,7 +13,7 @@ const (
 	DefaultHomeEnv      = "HOME"
 	DefaultMCPConfig    = ".mcp.json"
 	DefaultDirPerm      = 0755
-	FileExtension       = ".json"
+	FileExtension       = ".jsonc"
 	DefaultProfileName  = "default"
 )
 

@@ -44,7 +44,7 @@ func TestCreate(t *testing.T) {
 
 			if !tt.wantErr {
 				// プロファイルファイルが作成されているか確認
-				profilePath := filepath.Join(tempDir, tt.profileName+".json")
+				profilePath := filepath.Join(tempDir, tt.profileName+".jsonc")
 				if _, err := os.Stat(profilePath); os.IsNotExist(err) {
 					t.Errorf("プロファイルファイルが作成されていません: %s", profilePath)
 				}

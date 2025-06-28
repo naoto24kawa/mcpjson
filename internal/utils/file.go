@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/tidwall/jsonc"
 )
 
 func FileExists(path string) bool {
@@ -14,26 +16,24 @@ func FileExists(path string) bool {
 }
 
 func LoadJSON(path string, v interface{}) error {
-	file, err := os.Open(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
 	
-	decoder := json.NewDecoder(file)
-	return decoder.Decode(v)
+	// JSONC形式（コメント付きJSON）を標準JSONに変換
+	jsonData := jsonc.ToJSON(data)
+	
+	return json.Unmarshal(jsonData, v)
 }
 
 func SaveJSON(path string, v interface{}) error {
-	file, err := os.Create(path)
+	data, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		return err
 	}
-	defer file.Close()
 	
-	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ")
-	return encoder.Encode(v)
+	return os.WriteFile(path, data, 0644)
 }
 
 

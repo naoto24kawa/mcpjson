@@ -78,7 +78,7 @@ func TestManager_Create(t *testing.T) {
 
 			if !tt.wantErr {
 				// プロファイルファイルが作成されているか確認
-				profilePath := filepath.Join(tempDir, tt.profileName+".json")
+				profilePath := filepath.Join(tempDir, tt.profileName+".jsonc")
 				if _, err := os.Stat(profilePath); os.IsNotExist(err) {
 					t.Errorf("プロファイルファイルが作成されていません: %s", profilePath)
 				}
@@ -100,7 +100,7 @@ func TestManager_Load(t *testing.T) {
 		Servers:     []ServerRef{},
 	}
 
-	profilePath := filepath.Join(tempDir, "test-profile.json")
+	profilePath := filepath.Join(tempDir, "test-profile.jsonc")
 	file, err := os.Create(profilePath)
 	if err != nil {
 		t.Fatalf("テストファイル作成に失敗: %v", err)
@@ -290,7 +290,7 @@ func createTestProfiles(t *testing.T, manager *Manager, profileNames []string) {
 func verifyProfilesDeleted(t *testing.T, tempDir string, profileNames []string) {
 	t.Helper()
 	for _, name := range profileNames {
-		profilePath := filepath.Join(tempDir, name+".json")
+		profilePath := filepath.Join(tempDir, name+".jsonc")
 		if _, err := os.Stat(profilePath); !os.IsNotExist(err) {
 			t.Errorf("プロファイルファイル '%s' が削除されていません", profilePath)
 		}
@@ -364,13 +364,13 @@ func verifyRenameSuccess(t *testing.T, manager *Manager, tempDir, oldName, newNa
 	t.Helper()
 	
 	// 新しい名前のファイルが存在することを確認
-	newPath := filepath.Join(tempDir, newName+".json")
+	newPath := filepath.Join(tempDir, newName+".jsonc")
 	if _, err := os.Stat(newPath); os.IsNotExist(err) {
 		t.Errorf("リネーム後のプロファイルファイル '%s' が存在しません", newPath)
 	}
 
 	// 古い名前のファイルが削除されていることを確認
-	oldPath := filepath.Join(tempDir, oldName+".json")
+	oldPath := filepath.Join(tempDir, oldName+".jsonc")
 	if _, err := os.Stat(oldPath); !os.IsNotExist(err) {
 		t.Errorf("リネーム前のプロファイルファイル '%s' が削除されていません", oldPath)
 	}

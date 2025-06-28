@@ -50,7 +50,7 @@ func TestManager_SaveManual(t *testing.T) {
 
 			if !tt.wantErr {
 				// テンプレートファイルが作成されているか確認
-				templatePath := filepath.Join(tempDir, tt.templateName+".json")
+				templatePath := filepath.Join(tempDir, tt.templateName+".jsonc")
 				if _, err := os.Stat(templatePath); os.IsNotExist(err) {
 					t.Errorf("テンプレートファイルが作成されていません: %s", templatePath)
 				}
@@ -75,7 +75,7 @@ func TestManager_Load(t *testing.T) {
 		},
 	}
 
-	templatePath := filepath.Join(tempDir, "test-template.json")
+	templatePath := filepath.Join(tempDir, "test-template.jsonc")
 	file, err := os.Create(templatePath)
 	if err != nil {
 		t.Fatalf("テストファイル作成に失敗: %v", err)
@@ -152,7 +152,7 @@ func TestManager_Delete(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := manager.Delete(tt.templateName, tt.force)
+			err := manager.Delete(tt.templateName, tt.force, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Manager.Delete() error = %v, wantErr %v", err, tt.wantErr)
 			}
