@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "my-test-server": {
+      "command": "python",
+      "args": [
+        "test.py"
+      ]
+    }
+  }
+}
