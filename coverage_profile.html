@@ -1,0 +1,565 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>profile: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/naoto24kawa/mcpconfig/internal/profile/profile.go (81.5%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package profile
+
+import (
+        "fmt"
+        "os"
+        "path/filepath"
+        "strings"
+        "time"
+
+        "github.com/naoto24kawa/mcpconfig/internal/config"
+        "github.com/naoto24kawa/mcpconfig/internal/interaction"
+        "github.com/naoto24kawa/mcpconfig/internal/mcpconfig"
+        "github.com/naoto24kawa/mcpconfig/internal/server"
+        "github.com/naoto24kawa/mcpconfig/internal/utils"
+)
+
+const (
+        ListColumnWidth     = 20
+        TimestampFormat     = "2006-01-02 15:04:05"
+        TableSeparatorChar  = "-"
+        TableSeparatorWidth = 60
+)
+
+type Profile struct {
+        Name        string           `json:"name"`
+        Description string           `json:"description"`
+        CreatedAt   time.Time        `json:"createdAt"`
+        UpdatedAt   time.Time        `json:"updatedAt"`
+        Servers     []ServerRef      `json:"servers"`
+}
+
+type ServerRef = mcpconfig.ServerRef
+type ServerOverrides = mcpconfig.ServerOverrides
+
+
+type Manager struct {
+        profilesDir string
+}
+
+func NewManager(profilesDir string) *Manager <span class="cov8" title="1">{
+        return &amp;Manager{
+                profilesDir: profilesDir,
+        }
+}</span>
+
+func (m *Manager) Create(name, description string) error <span class="cov8" title="1">{
+        profilePath := m.getProfilePath(name)
+        
+        if _, err := os.Stat(profilePath); err == nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("プロファイル '%s' は既に存在します", name)
+        }</span>
+        
+        <span class="cov8" title="1">profile := &amp;Profile{
+                Name:        name,
+                Description: description,
+                CreatedAt:   time.Now(),
+                UpdatedAt:   time.Now(),
+                Servers:     []ServerRef{},
+        }
+        
+        return m.saveProfile(profile)</span>
+}
+
+func (m *Manager) Save(name string, mcpConfigPath string, serverManager *server.Manager, force bool) error <span class="cov8" title="1">{
+        if err := m.validateProfileCreation(name, force); err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        
+        <span class="cov8" title="1">profile, err := m.buildProfileFromMCP(name, mcpConfigPath, serverManager)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        
+        <span class="cov8" title="1">if err := m.saveProfile(profile); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        
+        <span class="cov8" title="1">fmt.Printf("プロファイル '%s' を保存しました (%d個のサーバー)\n", name, len(profile.Servers))
+        return nil</span>
+}
+
+func (m *Manager) buildProfileFromMCP(name, mcpConfigPath string, serverManager *server.Manager) (*Profile, error) <span class="cov8" title="1">{
+        mcpConfig, err := m.loadMCPConfig(mcpConfigPath)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        
+        <span class="cov8" title="1">profile := m.createProfileFromMCP(name, mcpConfigPath)
+        
+        if err := m.processServers(profile, mcpConfig, serverManager); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        
+        <span class="cov8" title="1">return profile, nil</span>
+}
+
+func (m *Manager) validateProfileCreation(name string, force bool) error <span class="cov8" title="1">{
+        profilePath := filepath.Join(m.profilesDir, name+config.FileExtension)
+        
+        if _, err := os.Stat(profilePath); err == nil &amp;&amp; !force </span><span class="cov8" title="1">{
+                return fmt.Errorf("プロファイル '%s' は既に存在します。--force オプションで上書きしてください", name)
+        }</span>
+        
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (m *Manager) loadMCPConfig(mcpConfigPath string) (*server.MCPConfig, error) <span class="cov8" title="1">{
+        mcpManager := mcpconfig.NewMCPConfigManager()
+        return mcpManager.Load(mcpConfigPath)
+}</span>
+
+func (m *Manager) createProfileFromMCP(name, mcpConfigPath string) *Profile <span class="cov8" title="1">{
+        return &amp;Profile{
+                Name:        name,
+                Description: fmt.Sprintf("%s から保存", mcpConfigPath),
+                CreatedAt:   time.Now(),
+                UpdatedAt:   time.Now(),
+                Servers:     []ServerRef{},
+        }
+}</span>
+
+func (m *Manager) processServers(profile *Profile, mcpConfig *server.MCPConfig, serverManager *server.Manager) error <span class="cov8" title="1">{
+        for serverName, mcpServer := range mcpConfig.McpServers </span><span class="cov8" title="1">{
+                if err := m.processServer(profile, serverName, mcpServer, serverManager); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (m *Manager) processServer(profile *Profile, serverName string, mcpServer server.MCPServer, serverManager *server.Manager) error <span class="cov8" title="1">{
+        templateName := serverName
+        
+        if err := m.ensureServerTemplate(templateName, mcpServer, serverManager); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        
+        <span class="cov8" title="1">profile.Servers = append(profile.Servers, ServerRef{
+                Name:     serverName,
+                Template: templateName,
+        })
+        return nil</span>
+}
+
+func (m *Manager) ensureServerTemplate(templateName string, mcpServer server.MCPServer, serverManager *server.Manager) error <span class="cov8" title="1">{
+        exists, err := serverManager.Exists(templateName)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        
+        <span class="cov8" title="1">if !exists </span><span class="cov8" title="1">{
+                if err := m.createServerTemplate(templateName, mcpServer, serverManager); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+                <span class="cov8" title="1">fmt.Printf("サーバーテンプレート '%s' を作成しました\n", templateName)</span>
+        } else<span class="cov0" title="0"> {
+                fmt.Printf("サーバーテンプレート '%s' は既に存在するため、既存のものを使用します\n", templateName)
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (m *Manager) createServerTemplate(templateName string, mcpServer server.MCPServer, serverManager *server.Manager) error <span class="cov8" title="1">{
+        serverConfig := server.MCPServer{
+                Command:       mcpServer.Command,
+                Args:          mcpServer.Args,
+                Env:           mcpServer.Env,
+                Timeout:       mcpServer.Timeout,
+                EnvFile:       mcpServer.EnvFile,
+                TransportType: mcpServer.TransportType,
+        }
+        return serverManager.SaveFromConfig(templateName, serverConfig)
+}</span>
+
+func (m *Manager) Apply(name string, targetPath string, serverManager *server.Manager) error <span class="cov8" title="1">{
+        profile, err := m.Load(name)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        
+        <span class="cov8" title="1">mcpManager := mcpconfig.NewMCPConfigManager()
+        mcpConfig, err := mcpManager.BuildFromProfile((*mcpconfig.ProfileData)(profile), serverManager)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        
+        <span class="cov8" title="1">if err := mcpManager.Save(mcpConfig, targetPath); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        
+        <span class="cov8" title="1">fmt.Printf("プロファイル '%s' を適用しました\n", name)
+        fmt.Printf("%d個のサーバー設定を '%s' に保存\n", len(profile.Servers), targetPath)
+        return nil</span>
+}
+
+func (m *Manager) List(detail bool) error <span class="cov8" title="1">{
+        files, err := os.ReadDir(m.profilesDir)
+        if err != nil </span><span class="cov8" title="1">{
+                return fmt.Errorf("プロファイルディレクトリの読み込みに失敗しました: %w", err)
+        }</span>
+        
+        <span class="cov8" title="1">if len(files) == 0 </span><span class="cov8" title="1">{
+                fmt.Println("プロファイルが存在しません")
+                return nil
+        }</span>
+        
+        <span class="cov8" title="1">if detail </span><span class="cov8" title="1">{
+                return m.listDetailed(files)
+        }</span>
+        <span class="cov8" title="1">return m.listSummary(files)</span>
+}
+
+func (m *Manager) listDetailed(files []os.DirEntry) error <span class="cov8" title="1">{
+        for _, file := range files </span><span class="cov8" title="1">{
+                if strings.HasSuffix(file.Name(), config.FileExtension) </span><span class="cov8" title="1">{
+                        name := strings.TrimSuffix(file.Name(), config.FileExtension)
+                        profile, err := m.Load(name)
+                        if err != nil </span><span class="cov0" title="0">{
+                                fmt.Printf("エラー: %s の読み込みに失敗しました: %v\n", name, err)
+                                continue</span>
+                        }
+                        
+                        <span class="cov8" title="1">m.printProfileDetails(profile)</span>
+                }
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (m *Manager) listSummary(files []os.DirEntry) error <span class="cov8" title="1">{
+        fmt.Printf("%-*s %-*s %s\n", ListColumnWidth, "プロファイル名", ListColumnWidth, "作成日時", "サーバー数")
+        fmt.Println(strings.Repeat(TableSeparatorChar, TableSeparatorWidth))
+        
+        for _, file := range files </span><span class="cov8" title="1">{
+                if strings.HasSuffix(file.Name(), config.FileExtension) </span><span class="cov8" title="1">{
+                        name := strings.TrimSuffix(file.Name(), config.FileExtension)
+                        profile, err := m.Load(name)
+                        if err != nil </span><span class="cov0" title="0">{
+                                continue</span>
+                        }
+                        
+                        <span class="cov8" title="1">fmt.Printf("%-*s %-*s %d\n",
+                                ListColumnWidth, profile.Name,
+                                ListColumnWidth, profile.CreatedAt.Format(TimestampFormat),
+                                len(profile.Servers))</span>
+                }
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (m *Manager) printProfileDetails(profile *Profile) <span class="cov8" title="1">{
+        fmt.Printf("\nプロファイル: %s\n", profile.Name)
+        fmt.Printf("  説明: %s\n", profile.Description)
+        fmt.Printf("  作成日時: %s\n", profile.CreatedAt.Format(TimestampFormat))
+        fmt.Printf("  更新日時: %s\n", profile.UpdatedAt.Format(TimestampFormat))
+        fmt.Printf("  サーバー数: %d\n", len(profile.Servers))
+        
+        if len(profile.Servers) &gt; 0 </span><span class="cov0" title="0">{
+                fmt.Println("  サーバー:")
+                for _, server := range profile.Servers </span><span class="cov0" title="0">{
+                        fmt.Printf("    - %s (テンプレート: %s)\n", server.Name, server.Template)
+                }</span>
+        }
+}
+
+func (m *Manager) Delete(name string, force bool) error <span class="cov8" title="1">{
+        profilePath := m.getProfilePath(name)
+        
+        if _, err := os.Stat(profilePath); os.IsNotExist(err) </span><span class="cov8" title="1">{
+                return fmt.Errorf("プロファイル '%s' が見つかりません", name)
+        }</span>
+        
+        <span class="cov8" title="1">if !force </span><span class="cov0" title="0">{
+                if !interaction.Confirm(fmt.Sprintf("プロファイル '%s' を削除しますか？", name)) </span><span class="cov0" title="0">{
+                        fmt.Println("削除をキャンセルしました")
+                        return nil
+                }</span>
+        }
+        
+        <span class="cov8" title="1">if err := os.Remove(profilePath); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("プロファイルの削除に失敗しました: %w", err)
+        }</span>
+        
+        <span class="cov8" title="1">fmt.Printf("プロファイル '%s' を削除しました\n", name)
+        return nil</span>
+}
+
+func (m *Manager) Rename(oldName, newName string, force bool) error <span class="cov8" title="1">{
+        oldPath := m.getProfilePath(oldName)
+        newPath := m.getProfilePath(newName)
+        
+        if _, err := os.Stat(oldPath); os.IsNotExist(err) </span><span class="cov8" title="1">{
+                return fmt.Errorf("プロファイル '%s' が見つかりません", oldName)
+        }</span>
+        
+        <span class="cov8" title="1">if _, err := os.Stat(newPath); err == nil &amp;&amp; !force </span><span class="cov8" title="1">{
+                return fmt.Errorf("プロファイル '%s' は既に存在します。別の名前を指定するか、--force オプションで上書きしてください", newName)
+        }</span>
+        
+        <span class="cov8" title="1">profile, err := m.Load(oldName)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        
+        <span class="cov8" title="1">profile.Name = newName
+        profile.UpdatedAt = time.Now()
+        
+        if err := m.saveProfile(profile); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        
+        <span class="cov8" title="1">if err := os.Remove(oldPath); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("古いプロファイルの削除に失敗しました: %w", err)
+        }</span>
+        
+        <span class="cov8" title="1">fmt.Printf("プロファイル '%s' を '%s' に変更しました\n", oldName, newName)
+        return nil</span>
+}
+
+
+func (m *Manager) Load(name string) (*Profile, error) <span class="cov8" title="1">{
+        profilePath := m.getProfilePath(name)
+        
+        profile := &amp;Profile{}
+        if err := utils.LoadJSON(profilePath, profile); err != nil </span><span class="cov8" title="1">{
+                if os.IsNotExist(err) </span><span class="cov8" title="1">{
+                        return nil, fmt.Errorf("プロファイル '%s' が見つかりません", name)
+                }</span>
+                <span class="cov0" title="0">return nil, fmt.Errorf("プロファイルの読み込みに失敗しました: %w", err)</span>
+        }
+        
+        <span class="cov8" title="1">return profile, nil</span>
+}
+
+func (m *Manager) getProfilePath(name string) string <span class="cov8" title="1">{
+        return filepath.Join(m.profilesDir, name+config.FileExtension)
+}</span>
+
+func (m *Manager) saveProfile(profile *Profile) error <span class="cov8" title="1">{
+        profilePath := m.getProfilePath(profile.Name)
+        return utils.SaveJSON(profilePath, profile)
+}</span>
+
+func (m *Manager) AddServer(profileName, templateName, serverName string, envOverrides map[string]string) error <span class="cov8" title="1">{
+        profile, err := m.Load(profileName)
+        if err != nil </span><span class="cov8" title="1">{
+                return err
+        }</span>
+        
+        <span class="cov8" title="1">if serverName == "" </span><span class="cov8" title="1">{
+                serverName = templateName
+        }</span>
+        
+        <span class="cov8" title="1">for _, server := range profile.Servers </span><span class="cov8" title="1">{
+                if server.Name == serverName </span><span class="cov8" title="1">{
+                        return fmt.Errorf("サーバー名 '%s' は既にプロファイル '%s' に存在します。別の名前を指定してください（--as オプションを使用）", serverName, profileName)
+                }</span>
+        }
+        
+        <span class="cov8" title="1">serverRef := ServerRef{
+                Name:     serverName,
+                Template: templateName,
+        }
+        
+        if len(envOverrides) &gt; 0 </span><span class="cov8" title="1">{
+                serverRef.Overrides.Env = envOverrides
+        }</span>
+        
+        <span class="cov8" title="1">profile.Servers = append(profile.Servers, serverRef)
+        profile.UpdatedAt = time.Now()
+        
+        if err := m.saveProfile(profile); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        
+        <span class="cov8" title="1">fmt.Printf("サーバー '%s' をプロファイル '%s' に追加しました\n", serverName, profileName)
+        return nil</span>
+}
+
+func (m *Manager) RemoveServer(profileName, serverName string) error <span class="cov8" title="1">{
+        profile, err := m.Load(profileName)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        
+        <span class="cov8" title="1">found := false
+        newServers := []ServerRef{}
+        
+        for _, server := range profile.Servers </span><span class="cov8" title="1">{
+                if server.Name != serverName </span><span class="cov0" title="0">{
+                        newServers = append(newServers, server)
+                }</span> else<span class="cov8" title="1"> {
+                        found = true
+                }</span>
+        }
+        
+        <span class="cov8" title="1">if !found </span><span class="cov8" title="1">{
+                return fmt.Errorf("サーバー '%s' がプロファイル '%s' に見つかりません", serverName, profileName)
+        }</span>
+        
+        <span class="cov8" title="1">profile.Servers = newServers
+        profile.UpdatedAt = time.Now()
+        
+        if err := m.saveProfile(profile); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        
+        <span class="cov8" title="1">fmt.Printf("サーバー '%s' をプロファイル '%s' から削除しました\n", serverName, profileName)
+        return nil</span>
+}
+
+func (m *Manager) Reset(force bool) error <span class="cov8" title="1">{
+        if _, err := os.Stat(m.profilesDir); os.IsNotExist(err) </span><span class="cov8" title="1">{
+                fmt.Println("プロファイルディレクトリが存在しません")
+                return nil
+        }</span>
+        
+        <span class="cov8" title="1">files, err := os.ReadDir(m.profilesDir)
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("プロファイルディレクトリの読み込みに失敗しました: %w", err)
+        }</span>
+        
+        <span class="cov8" title="1">profileFiles := []string{}
+        for _, file := range files </span><span class="cov8" title="1">{
+                if strings.HasSuffix(file.Name(), config.FileExtension) </span><span class="cov8" title="1">{
+                        profileFiles = append(profileFiles, file.Name())
+                }</span>
+        }
+        
+        <span class="cov8" title="1">if len(profileFiles) == 0 </span><span class="cov8" title="1">{
+                fmt.Println("削除するプロファイルが存在しません")
+                return nil
+        }</span>
+        
+        <span class="cov8" title="1">if !force </span><span class="cov0" title="0">{
+                fmt.Printf("以下の%d個のプロファイルを削除します:\n", len(profileFiles))
+                for _, file := range profileFiles </span><span class="cov0" title="0">{
+                        name := strings.TrimSuffix(file, config.FileExtension)
+                        fmt.Printf("  - %s\n", name)
+                }</span>
+                <span class="cov0" title="0">fmt.Println()
+                
+                if !interaction.Confirm("すべてのプロファイルを削除しますか？") </span><span class="cov0" title="0">{
+                        fmt.Println("リセットをキャンセルしました")
+                        return nil
+                }</span>
+        }
+        
+        <span class="cov8" title="1">deletedCount := 0
+        for _, file := range profileFiles </span><span class="cov8" title="1">{
+                profilePath := filepath.Join(m.profilesDir, file)
+                if err := os.Remove(profilePath); err != nil </span><span class="cov0" title="0">{
+                        fmt.Printf("警告: %s の削除に失敗しました: %v\n", file, err)
+                }</span> else<span class="cov8" title="1"> {
+                        deletedCount++
+                }</span>
+        }
+        
+        <span class="cov8" title="1">fmt.Printf("プロファイルを%d個削除しました\n", deletedCount)
+        return nil</span>
+}
+
+
+
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
