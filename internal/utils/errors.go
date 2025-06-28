@@ -46,6 +46,11 @@ func ParseProfileName(args []string, defaultName string) (profileName string, ar
 		fmt.Printf("プロファイル名が指定されていないため、デフォルト '%s' を使用します\n", defaultName)
 		return defaultName, 0
 	}
+	// Check if the first argument is an option (starts with -)
+	if len(args[0]) > 0 && args[0][0] == '-' {
+		fmt.Printf("プロファイル名が指定されていないため、デフォルト '%s' を使用します\n", defaultName)
+		return defaultName, 0
+	}
 	return args[0], 1
 }
 

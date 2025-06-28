@@ -82,6 +82,16 @@ func TestExecute(t *testing.T) {
 				return createTestMCPConfig(mcpPath)
 			},
 		},
+		{
+			name: "プロファイル名未指定でデフォルト使用",
+			args: func(tempDir string) []string {
+				return []string{"--from", filepath.Join(tempDir, "test-mcp.json")}
+			},
+			setup: func(tempDir string, cfg *config.Config) error {
+				mcpPath := filepath.Join(tempDir, "test-mcp.json")
+				return createTestMCPConfig(mcpPath)
+			},
+		},
 	}
 
 	for _, tt := range tests {

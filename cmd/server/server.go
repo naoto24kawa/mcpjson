@@ -6,6 +6,7 @@ import (
 
 	"github.com/naoto24kawa/mcpconfig/cmd/server/add"
 	"github.com/naoto24kawa/mcpconfig/cmd/server/delete"
+	"github.com/naoto24kawa/mcpconfig/cmd/server/detail"
 	"github.com/naoto24kawa/mcpconfig/cmd/server/list"
 	"github.com/naoto24kawa/mcpconfig/cmd/server/remove"
 	"github.com/naoto24kawa/mcpconfig/cmd/server/rename"
@@ -39,6 +40,8 @@ func Execute(cfg *config.Config, args []string) {
 		remove.Execute(cfg, subArgs)
 	case "show":
 		show.Execute(cfg, subArgs)
+	case "detail":
+		detail.Execute(cfg, subArgs)
 	default:
 		fmt.Fprintf(os.Stderr, "エラー: 不明なサブコマンド 'server %s'\n", subCmd)
 		PrintUsage()
@@ -60,6 +63,7 @@ func PrintUsage() {
   rename <現在のサーバー名> <新しいサーバー名>              サーバー名変更
   add <サーバー名> --to <プロファイル名>                  プロファイルにサーバー追加
   remove <サーバー名> --from <プロファイル名>             プロファイルからサーバー削除
-  show --from <パス> [--server <サーバー名>]             設定ファイルからサーバー情報表示`)
+  show --from <パス> [--server <サーバー名>]             設定ファイルからサーバー情報表示
+  detail <サーバー名>                                   サーバーテンプレートの詳細を表示`)
 }
 

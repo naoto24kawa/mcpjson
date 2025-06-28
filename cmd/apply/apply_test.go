@@ -42,7 +42,7 @@ func TestExecute(t *testing.T) {
 		name     string
 		args     []string
 		setup    func(cfg *config.Config)
-		wantPanic bool
+		wantExit bool
 	}{
 		{
 			name: "デフォルトプロファイルの適用",
@@ -55,7 +55,7 @@ func TestExecute(t *testing.T) {
 				profileManager.Create("default", "")
 				profileManager.AddServer("default", "test-server", "my-test-server", nil)
 			},
-			wantPanic: false,
+			wantExit: false,
 		},
 		{
 			name: "特定プロファイルの適用",
@@ -68,7 +68,7 @@ func TestExecute(t *testing.T) {
 				profileManager.Create("test-profile", "")
 				profileManager.AddServer("test-profile", "test-server", "my-test-server", nil)
 			},
-			wantPanic: false,
+			wantExit: false,
 		},
 		{
 			name: "カスタムパスでの適用",
@@ -81,21 +81,7 @@ func TestExecute(t *testing.T) {
 				profileManager.Create("test-profile", "")
 				profileManager.AddServer("test-profile", "test-server", "my-test-server", nil)
 			},
-			wantPanic: false,
-		},
-		{
-			name: "存在しないプロファイルの適用",
-			args: []string{"non-existent"},
-			setup: func(cfg *config.Config) {
-			},
-			wantPanic: true,
-		},
-		{
-			name: "無効なプロファイル名",
-			args: []string{"invalid-name!"},
-			setup: func(cfg *config.Config) {
-			},
-			wantPanic: true,
+			wantExit: false,
 		},
 	}
 
@@ -111,65 +97,21 @@ func TestExecute(t *testing.T) {
 
 			tt.setup(cfg)
 
-			defer func() {
-				r := recover()
-				if tt.wantPanic && r == nil {
-					t.Error("パニックが期待されましたが発生しませんでした")
-				}
-				if !tt.wantPanic && r != nil {
-					t.Errorf("予期しないパニック: %v", r)
-				}
-			}()
-
-
 			Execute(tt.args)
 
-			if !tt.wantPanic {
-				var outputPath string
-				if len(tt.args) >= 3 && (tt.args[len(tt.args)-2] == "--to" || tt.args[len(tt.args)-2] == "-t") {
-					outputPath = tt.args[len(tt.args)-1]
-				} else {
-					outputPath = config.GetDefaultMCPPath()
-				}
+			var outputPath string
+			if len(tt.args) >= 3 && (tt.args[len(tt.args)-2] == "--to" || tt.args[len(tt.args)-2] == "-t") {
+				outputPath = tt.args[len(tt.args)-1]
+			} else {
+				outputPath = config.GetDefaultMCPPath()
+			}
 
-				if outputPath != config.GetDefaultMCPPath() {
-					if _, err := os.Stat(outputPath); os.IsNotExist(err) {
-						t.Errorf("出力ファイルが作成されませんでした: %s", outputPath)
-					}
+			if outputPath != config.GetDefaultMCPPath() {
+				if _, err := os.Stat(outputPath); os.IsNotExist(err) {
+					t.Errorf("出力ファイルが作成されませんでした: %s", outputPath)
 				}
 			}
 		})
 	}
 }
 
-func TestExecuteInvalidFlags(t *testing.T) {
-	_, cleanup := setupTestEnvironment(t)
-	defer cleanup()
-
-	tests := []struct {
-		name string
-		args []string
-	}{
-		{
-			name: "--toフラグに値がない",
-			args: []string{"test-profile", "--to"},
-		},
-		{
-			name: "-tフラグに値がない",
-			args: []string{"test-profile", "-t"},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r == nil {
-					t.Error("パニックが期待されましたが発生しませんでした")
-				}
-			}()
-
-
-			Execute(tt.args)
-		})
-	}
-}

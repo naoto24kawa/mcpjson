@@ -44,23 +44,23 @@ func TestExecute(t *testing.T) {
 	}{
 		{
 			name: "プロファイルのリネーム",
-			args: []string{"old-name", "new-name"},
+			args: []string{"old-name1", "new-name1"},
 			setup: func(cfg *config.Config) {
 				profileManager := profile.NewManager(cfg.ProfilesDir)
-				profileManager.Create("old-name", "test description")
+				profileManager.Create("old-name1", "test description")
 			},
 		},
 		{
 			name: "プロファイルのリネーム（強制）",
-			args: []string{"old-name", "new-name", "--force"},
+			args: []string{"old-name2", "new-name2", "--force"},
 			setup: func(cfg *config.Config) {
 				profileManager := profile.NewManager(cfg.ProfilesDir)
-				profileManager.Create("old-name", "test description")
+				profileManager.Create("old-name2", "test description")
 			},
 		},
 		{
 			name: "デフォルトプロファイルのリネーム",
-			args: []string{"new-name"},
+			args: []string{"new-name3"},
 			setup: func(cfg *config.Config) {
 				profileManager := profile.NewManager(cfg.ProfilesDir)
 				profileManager.Create(config.DefaultProfileName, "test description")
