@@ -60,7 +60,7 @@ func ParseFlag(args []string, index int, flag string) (string, int, error) {
 // ParseRenameArgs parses rename command arguments (special case)
 func ParseRenameArgs(args []string, defaultName string) (oldName, newName string, argsOffset int, err error) {
 	if len(args) < 1 {
-		return "", "", 0, fmt.Errorf("新しいプロファイル名が指定されていません\n使用方法: mcpconfig rename [現在の名前] <新しい名前>")
+		return "", "", 0, fmt.Errorf("新しいプロファイル名が指定されていません\n使用方法: mcpconfig rename [現在のプロファイル名] <新しいプロファイル名>")
 	}
 	
 	if len(args) < 2 {

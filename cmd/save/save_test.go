@@ -58,13 +58,15 @@ func createTestMCPConfig(path string) error {
 
 func TestExecute(t *testing.T) {
 	tests := []struct {
-		name  string
-		args  []string
-		setup func(tempDir string, cfg *config.Config) error
+		name      string
+		args      func(tempDir string) []string
+		setup     func(tempDir string, cfg *config.Config) error
 	}{
 		{
 			name: "MCPファイルからプロファイル保存",
-			args: []string{"test-profile", "--from", "test-mcp.json"},
+			args: func(tempDir string) []string {
+				return []string{"test-profile", "--from", filepath.Join(tempDir, "test-mcp.json")}
+			},
 			setup: func(tempDir string, cfg *config.Config) error {
 				mcpPath := filepath.Join(tempDir, "test-mcp.json")
 				return createTestMCPConfig(mcpPath)
@@ -72,7 +74,9 @@ func TestExecute(t *testing.T) {
 		},
 		{
 			name: "強制保存",
-			args: []string{"test-profile", "--from", "test-mcp.json", "--force"},
+			args: func(tempDir string) []string {
+				return []string{"test-profile", "--from", filepath.Join(tempDir, "test-mcp.json"), "--force"}
+			},
 			setup: func(tempDir string, cfg *config.Config) error {
 				mcpPath := filepath.Join(tempDir, "test-mcp.json")
 				return createTestMCPConfig(mcpPath)
@@ -100,7 +104,7 @@ func TestExecute(t *testing.T) {
 				}
 			}()
 
-			Execute(tt.args)
+			Execute(tt.args(tempDir))
 		})
 	}
 }

@@ -40,3 +40,7 @@ Thumbs.db
 # Test coverage
 coverage.txt
 coverage.html
+
+# MCP configuration files generated during testing
+*.mcp.json
+.mcp.json
