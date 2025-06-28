@@ -9,6 +9,23 @@ import (
 	"github.com/naoto24kawa/mcpconfig/internal/utils"
 )
 
+func findMCPConfigFile() string {
+	localPath := config.GetDefaultMCPPath()
+	if _, err := os.Stat(localPath); err == nil {
+		return localPath
+	}
+
+	foundPath := config.FindMCPConfigPath()
+	if foundPath == "" {
+		fmt.Fprintln(os.Stderr, "エラー: MCP設定ファイルが見つかりません")
+		fmt.Fprintln(os.Stderr, "使用方法: mcpconfig save <プロファイル名> --from <パス>")
+		os.Exit(utils.ExitArgumentError)
+	}
+
+	fmt.Printf("MCP設定ファイルを自動検出しました: %s\n", foundPath)
+	return foundPath
+}
+
 func Execute(args []string) {
 	profileName, argsOffset := utils.ParseProfileName(args, config.DefaultProfileName)
 	var fromPath string
@@ -26,13 +43,7 @@ func Execute(args []string) {
 	}
 
 	if fromPath == "" {
-		fromPath = config.FindMCPConfigPath()
-		if fromPath == "" {
-			fmt.Fprintln(os.Stderr, "エラー: MCP設定ファイルが見つかりません")
-			fmt.Fprintln(os.Stderr, "使用方法: mcpconfig save <プロファイル名> --from <パス>")
-			os.Exit(utils.ExitArgumentError)
-		}
-		fmt.Printf("MCP設定ファイルを自動検出しました: %s\n", fromPath)
+		fromPath = findMCPConfigFile()
 	}
 
 	utils.HandleArgumentError(utils.ValidateName(profileName, "プロファイル"))

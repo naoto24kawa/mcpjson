@@ -1,8 +1,6 @@
 package apply
 
 import (
-	"fmt"
-
 	"github.com/naoto24kawa/mcpconfig/internal/config"
 	"github.com/naoto24kawa/mcpconfig/cmd/profile"
 	"github.com/naoto24kawa/mcpconfig/internal/utils"
@@ -22,8 +20,7 @@ func Execute(args []string) {
 	}
 
 	if targetPath == "" {
-		targetPath = config.GetDefaultMCPConfigPath()
-		fmt.Printf("適用先が指定されていないため、デフォルトパスを使用します: %s\n", targetPath)
+		targetPath = config.GetDefaultMCPPath()
 	}
 
 	utils.HandleArgumentError(utils.ValidateName(profileName, "プロファイル"))

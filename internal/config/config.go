@@ -85,6 +85,8 @@ func FindMCPConfigPath() string {
 		filepath.Join(homeDir, DefaultMCPConfig),
 		filepath.Join(homeDir, ".config", "claude", "mcp.json"),
 		filepath.Join(homeDir, ".config", "mcp.json"),
+		filepath.Join(homeDir, ".claude", "mcp.json"),
+		".claude/mcp.json", // current directory .claude folder
 		"mcp.json", // current directory
 	}
 	
@@ -95,4 +97,13 @@ func FindMCPConfigPath() string {
 	}
 	
 	return "" // not found
+}
+
+// GetDefaultMCPPath returns the default MCP configuration file path (prefers local)
+func GetDefaultMCPPath() string {
+	localPath := "./.mcp.json"
+	if _, err := os.Stat(localPath); err == nil {
+		return localPath
+	}
+	return localPath // return local path even if it doesn't exist for consistency
 }
