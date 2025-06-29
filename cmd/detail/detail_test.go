@@ -103,7 +103,7 @@ func TestShowProfileDetail(t *testing.T) {
 	}
 
 	profileManager := profile.NewManager(cfg.ProfilesDir)
-	profileManager.Create("test-detail", "詳細テスト用")
+	_ = profileManager.Create("test-detail", "詳細テスト用")
 
 	err = showProfileDetail("test-detail")
 	if err != nil {

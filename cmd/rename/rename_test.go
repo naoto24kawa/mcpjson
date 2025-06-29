@@ -30,8 +30,8 @@ func setupTestEnvironment(t *testing.T) func() {
 		t.Fatalf("設定の作成に失敗: %v", err)
 	}
 
-	os.MkdirAll(cfg.ProfilesDir, 0755)
-	os.MkdirAll(cfg.ServersDir, 0755)
+	_ = os.MkdirAll(cfg.ProfilesDir, 0755)
+	_ = os.MkdirAll(cfg.ServersDir, 0755)
 
 	return cleanup
 }
@@ -47,7 +47,7 @@ func TestExecute(t *testing.T) {
 			args: []string{"old-name1", "new-name1"},
 			setup: func(cfg *config.Config) {
 				profileManager := profile.NewManager(cfg.ProfilesDir)
-				profileManager.Create("old-name1", "test description")
+				_ = profileManager.Create("old-name1", "test description")
 			},
 		},
 		{
@@ -55,7 +55,7 @@ func TestExecute(t *testing.T) {
 			args: []string{"old-name2", "new-name2", "--force"},
 			setup: func(cfg *config.Config) {
 				profileManager := profile.NewManager(cfg.ProfilesDir)
-				profileManager.Create("old-name2", "test description")
+				_ = profileManager.Create("old-name2", "test description")
 			},
 		},
 		{
