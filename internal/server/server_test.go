@@ -235,16 +235,16 @@ func TestManager_updateTemplateArgs(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// テンプレートを元の状態にリセット
 			template.ServerConfig.Args = []string{"old-arg"}
-			
+
 			// TemplateUpdaterを使用してテスト
 			updater := NewTemplateUpdater(manager.templateManager)
 			updater.UpdateTemplateArgs(template, tt.args)
-			
+
 			if len(template.ServerConfig.Args) != len(tt.expected) {
 				t.Errorf("引数の長さが期待値と異なります: got %d, want %d", len(template.ServerConfig.Args), len(tt.expected))
 				return
 			}
-			
+
 			for i, arg := range template.ServerConfig.Args {
 				if arg != tt.expected[i] {
 					t.Errorf("引数[%d] = %v, want %v", i, arg, tt.expected[i])
@@ -288,16 +288,16 @@ func TestManager_updateTemplateEnv(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// テンプレートを元の状態にリセット
 			template.ServerConfig.Env = map[string]string{"OLD_ENV": "old_value"}
-			
+
 			// TemplateUpdaterを使用してテスト
 			updater := NewTemplateUpdater(manager.templateManager)
 			updater.UpdateTemplateEnv(template, tt.env)
-			
+
 			if len(template.ServerConfig.Env) != len(tt.expected) {
 				t.Errorf("環境変数の数が期待値と異なります: got %d, want %d", len(template.ServerConfig.Env), len(tt.expected))
 				return
 			}
-			
+
 			for key, value := range tt.expected {
 				if template.ServerConfig.Env[key] != value {
 					t.Errorf("環境変数[%s] = %v, want %v", key, template.ServerConfig.Env[key], value)
@@ -311,10 +311,10 @@ func TestManager_Reset_EmptyDirectory(t *testing.T) {
 	// Arrange
 	tempDir := t.TempDir()
 	manager := NewManager(tempDir)
-	
+
 	// Act
 	err := manager.Reset(true)
-	
+
 	// Assert
 	if err != nil {
 		t.Errorf("Manager.Reset() on empty directory failed: %v", err)
@@ -325,10 +325,10 @@ func TestManager_Reset_NonexistentDirectory(t *testing.T) {
 	// Arrange
 	nonexistentDir := filepath.Join(os.TempDir(), "nonexistent-server-dir")
 	manager := NewManager(nonexistentDir)
-	
+
 	// Act
 	err := manager.Reset(true)
-	
+
 	// Assert
 	if err != nil {
 		t.Errorf("Manager.Reset() on nonexistent directory failed: %v", err)
@@ -339,7 +339,7 @@ func TestManager_Reset_MultipleTemplates(t *testing.T) {
 	// Arrange
 	tempDir := t.TempDir()
 	manager := NewManager(tempDir)
-	
+
 	// 複数のテンプレートを作成
 	templateNames := []string{"template1", "template2", "template3"}
 	for _, name := range templateNames {
@@ -348,15 +348,15 @@ func TestManager_Reset_MultipleTemplates(t *testing.T) {
 			t.Fatalf("Failed to create test template %s: %v", name, err)
 		}
 	}
-	
+
 	// Act
 	err := manager.Reset(true)
-	
+
 	// Assert
 	if err != nil {
 		t.Errorf("Manager.Reset() with multiple templates failed: %v", err)
 	}
-	
+
 	// すべてのテンプレートが削除されているか確認
 	for _, name := range templateNames {
 		exists, _ := manager.Exists(name)
@@ -370,33 +370,33 @@ func TestManager_Reset_WithNonTemplateFiles(t *testing.T) {
 	// Arrange
 	tempDir := t.TempDir()
 	manager := NewManager(tempDir)
-	
+
 	// テンプレートファイルを作成
 	err := manager.SaveManual("test-template", "test-command", []string{"test.py"}, nil, false)
 	if err != nil {
 		t.Fatalf("Failed to create test template: %v", err)
 	}
-	
+
 	// テンプレートファイル以外のファイルを作成
 	nonTemplateFile := filepath.Join(tempDir, "not-a-template.txt")
 	if err := os.WriteFile(nonTemplateFile, []byte("test"), 0644); err != nil {
 		t.Fatalf("Failed to create non-template file: %v", err)
 	}
-	
+
 	// Act
 	err = manager.Reset(true)
-	
+
 	// Assert
 	if err != nil {
 		t.Errorf("Manager.Reset() failed: %v", err)
 	}
-	
+
 	// テンプレートファイルが削除されているか確認
 	exists, _ := manager.Exists("test-template")
 	if exists {
 		t.Error("Template still exists after reset")
 	}
-	
+
 	// 非テンプレートファイルが残っているか確認
 	if _, err := os.Stat(nonTemplateFile); os.IsNotExist(err) {
 		t.Error("Non-template file was unexpectedly deleted")

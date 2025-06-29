@@ -38,9 +38,9 @@ func setupTestEnvironment(t *testing.T) (string, func()) {
 
 func TestExecute(t *testing.T) {
 	tests := []struct {
-		name      string
-		args      []string
-		setup     func(cfg *config.Config)
+		name  string
+		args  []string
+		setup func(cfg *config.Config)
 	}{
 		{
 			name: "デフォルトプロファイルの強制削除",

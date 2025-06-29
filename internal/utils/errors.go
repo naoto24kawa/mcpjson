@@ -41,7 +41,7 @@ func HandleEnvironmentError(err error) {
 }
 
 // ParseProfileName extracts profile name from args, using default if not provided
-func ParseProfileName(args []string, defaultName string) (profileName string, argsOffset int) {
+func ParseProfileName(args []string, defaultName string) (profileName string, consumedArgs int) {
 	if len(args) < 1 {
 		fmt.Printf("プロファイル名が指定されていないため、デフォルト '%s' を使用します\n", defaultName)
 		return defaultName, 0
@@ -63,17 +63,17 @@ func ParseFlag(args []string, index int, flag string) (string, int, error) {
 }
 
 // ParseRenameArgs parses rename command arguments (special case)
-func ParseRenameArgs(args []string, defaultName string) (oldName, newName string, argsOffset int, err error) {
+func ParseRenameArgs(args []string, defaultName string) (oldName, newName string, consumedArgs int, err error) {
 	if len(args) < 1 {
 		return "", "", 0, fmt.Errorf("新しいプロファイル名が指定されていません\n使用方法: mcpconfig rename [現在のプロファイル名] <新しいプロファイル名>")
 	}
-	
+
 	if len(args) < 2 {
 		oldName = defaultName
 		newName = args[0]
 		fmt.Printf("元のプロファイル名が指定されていないため、デフォルト '%s' を使用します\n", oldName)
 		return oldName, newName, 1, nil
 	}
-	
+
 	return args[0], args[1], 2, nil
 }

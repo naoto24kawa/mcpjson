@@ -87,7 +87,7 @@ func Execute(cfg *config.Config, args []string) {
 		}
 	} else if command != "" || argsStr != "" || envStr != "" || envFile != "" {
 		env := make(map[string]string)
-		
+
 		if envFile != "" {
 			fileEnv, err := utils.LoadEnvFile(envFile)
 			if err != nil {
@@ -98,7 +98,7 @@ func Execute(cfg *config.Config, args []string) {
 				env[k] = v
 			}
 		}
-		
+
 		if envStr != "" {
 			parsedEnv, err := utils.ParseEnvVars(envStr)
 			if err != nil {
@@ -109,9 +109,9 @@ func Execute(cfg *config.Config, args []string) {
 				env[k] = v
 			}
 		}
-		
+
 		parsedArgs := utils.ParseArgs(argsStr)
-		
+
 		if err := serverManager.SaveManual(templateName, command, parsedArgs, env, force); err != nil {
 			fmt.Fprintln(os.Stderr, "エラー:", err)
 			os.Exit(utils.ExitGeneralError)

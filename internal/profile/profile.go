@@ -15,23 +15,28 @@ import (
 )
 
 const (
-	ListColumnWidth     = 20
-	TimestampFormat     = time.RFC3339
-	TableSeparatorChar  = "-"
+	// 一覧表示時のプロファイル名カラム幅
+	ListColumnWidth = 20
+	// 一覧表示時の日時カラム幅
+	DateColumnWidth = 20
+	// 日時フォーマット（RFC3339形式）
+	TimestampFormat = time.RFC3339
+	// テーブル区切り文字
+	TableSeparatorChar = "-"
+	// テーブル区切り線の幅
 	TableSeparatorWidth = 60
 )
 
 type Profile struct {
-	Name        string           `json:"name"`
-	Description string           `json:"description"`
-	CreatedAt   time.Time        `json:"createdAt"`
-	UpdatedAt   time.Time        `json:"updatedAt"`
-	Servers     []ServerRef      `json:"servers"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	CreatedAt   time.Time   `json:"createdAt"`
+	UpdatedAt   time.Time   `json:"updatedAt"`
+	Servers     []ServerRef `json:"servers"`
 }
 
 type ServerRef = mcpconfig.ServerRef
 type ServerOverrides = mcpconfig.ServerOverrides
-
 
 type Manager struct {
 	profilesDir string
@@ -45,11 +50,11 @@ func NewManager(profilesDir string) *Manager {
 
 func (m *Manager) Create(name, description string) error {
 	profilePath := m.getProfilePath(name)
-	
+
 	if _, err := os.Stat(profilePath); err == nil {
 		return fmt.Errorf("プロファイル '%s' は既に存在します", name)
 	}
-	
+
 	profile := &Profile{
 		Name:        name,
 		Description: description,
@@ -57,7 +62,7 @@ func (m *Manager) Create(name, description string) error {
 		UpdatedAt:   time.Now(),
 		Servers:     []ServerRef{},
 	}
-	
+
 	return m.saveProfile(profile)
 }
 
@@ -65,16 +70,16 @@ func (m *Manager) Save(name string, mcpConfigPath string, serverManager *server.
 	if err := m.validateProfileCreation(name, force); err != nil {
 		return err
 	}
-	
+
 	profile, err := m.buildProfileFromMCP(name, mcpConfigPath, serverManager)
 	if err != nil {
 		return err
 	}
-	
+
 	if err := m.saveProfile(profile); err != nil {
 		return err
 	}
-	
+
 	m.printSaveSuccess(name, len(profile.Servers))
 	return nil
 }
@@ -88,23 +93,23 @@ func (m *Manager) buildProfileFromMCP(name, mcpConfigPath string, serverManager 
 	if err != nil {
 		return nil, fmt.Errorf("MCP設定の読み込みに失敗: %w", err)
 	}
-	
+
 	profile := m.createProfileFromMCP(name, mcpConfigPath)
-	
+
 	if err := m.processServers(profile, mcpConfig, serverManager); err != nil {
 		return nil, fmt.Errorf("サーバー処理に失敗: %w", err)
 	}
-	
+
 	return profile, nil
 }
 
 func (m *Manager) validateProfileCreation(name string, force bool) error {
 	profilePath := filepath.Join(m.profilesDir, name+config.FileExtension)
-	
+
 	if _, err := os.Stat(profilePath); err == nil && !force {
 		return fmt.Errorf("プロファイル '%s' は既に存在します。--force オプションで上書きしてください", name)
 	}
-	
+
 	return nil
 }
 
@@ -134,11 +139,11 @@ func (m *Manager) processServers(profile *Profile, mcpConfig *server.MCPConfig, 
 
 func (m *Manager) processServer(profile *Profile, serverName string, mcpServer server.MCPServer, serverManager *server.Manager) error {
 	templateName := serverName
-	
+
 	if err := m.ensureServerTemplate(templateName, mcpServer, serverManager); err != nil {
 		return err
 	}
-	
+
 	profile.Servers = append(profile.Servers, ServerRef{
 		Name:     serverName,
 		Template: templateName,
@@ -151,7 +156,7 @@ func (m *Manager) ensureServerTemplate(templateName string, mcpServer server.MCP
 	if err != nil {
 		return err
 	}
-	
+
 	if !exists {
 		if err := m.createServerTemplate(templateName, mcpServer, serverManager); err != nil {
 			return err
@@ -180,17 +185,17 @@ func (m *Manager) Apply(name string, targetPath string, serverManager *server.Ma
 	if err != nil {
 		return err
 	}
-	
+
 	mcpManager := mcpconfig.NewMCPConfigManager()
 	mcpConfig, err := mcpManager.BuildFromProfile((*mcpconfig.ProfileData)(profile), serverManager)
 	if err != nil {
 		return err
 	}
-	
+
 	if err := mcpManager.Save(mcpConfig, targetPath); err != nil {
 		return err
 	}
-	
+
 	fmt.Printf("プロファイル '%s' を適用しました\n", name)
 	fmt.Printf("%d個のサーバー設定を '%s' に保存\n", len(profile.Servers), targetPath)
 	return nil
@@ -201,12 +206,12 @@ func (m *Manager) List(detail bool) error {
 	if err != nil {
 		return fmt.Errorf("プロファイルディレクトリの読み込みに失敗しました: %w", err)
 	}
-	
+
 	if len(files) == 0 {
 		fmt.Println("プロファイルが存在しません")
 		return nil
 	}
-	
+
 	if detail {
 		return m.listDetailed(files)
 	}
@@ -222,7 +227,7 @@ func (m *Manager) listDetailed(files []os.DirEntry) error {
 				fmt.Printf("エラー: %s の読み込みに失敗しました: %v\n", name, err)
 				continue
 			}
-			
+
 			m.printProfileDetails(profile)
 		}
 	}
@@ -230,9 +235,9 @@ func (m *Manager) listDetailed(files []os.DirEntry) error {
 }
 
 func (m *Manager) listSummary(files []os.DirEntry) error {
-	fmt.Printf("%-*s %-*s %s\n", ListColumnWidth, "プロファイル名", ListColumnWidth, "作成日時", "サーバー数")
+	fmt.Printf("%-*s %-*s %s\n", ListColumnWidth, "プロファイル名", DateColumnWidth, "作成日時", "サーバー数")
 	fmt.Println(strings.Repeat(TableSeparatorChar, TableSeparatorWidth))
-	
+
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), config.FileExtension) {
 			name := strings.TrimSuffix(file.Name(), config.FileExtension)
@@ -240,10 +245,10 @@ func (m *Manager) listSummary(files []os.DirEntry) error {
 			if err != nil {
 				continue
 			}
-			
+
 			fmt.Printf("%-*s %-*s %d\n",
 				ListColumnWidth, profile.Name,
-				ListColumnWidth, profile.CreatedAt.Format(TimestampFormat),
+				DateColumnWidth, profile.CreatedAt.Format(TimestampFormat),
 				len(profile.Servers))
 		}
 	}
@@ -256,7 +261,7 @@ func (m *Manager) printProfileDetails(profile *Profile) {
 	fmt.Printf("  作成日時: %s\n", profile.CreatedAt.Format(TimestampFormat))
 	fmt.Printf("  更新日時: %s\n", profile.UpdatedAt.Format(TimestampFormat))
 	fmt.Printf("  サーバー数: %d\n", len(profile.Servers))
-	
+
 	if len(profile.Servers) > 0 {
 		fmt.Println("  サーバー:")
 		for _, server := range profile.Servers {
@@ -267,22 +272,22 @@ func (m *Manager) printProfileDetails(profile *Profile) {
 
 func (m *Manager) Delete(name string, force bool) error {
 	profilePath := m.getProfilePath(name)
-	
+
 	if _, err := os.Stat(profilePath); os.IsNotExist(err) {
 		return fmt.Errorf("プロファイル '%s' が見つかりません", name)
 	}
-	
+
 	if !force {
 		if !interaction.Confirm(fmt.Sprintf("プロファイル '%s' を削除しますか？", name)) {
 			fmt.Println("削除をキャンセルしました")
 			return nil
 		}
 	}
-	
+
 	if err := os.Remove(profilePath); err != nil {
 		return fmt.Errorf("プロファイルの削除に失敗しました: %w", err)
 	}
-	
+
 	fmt.Printf("プロファイル '%s' を削除しました\n", name)
 	return nil
 }
@@ -290,39 +295,38 @@ func (m *Manager) Delete(name string, force bool) error {
 func (m *Manager) Rename(oldName, newName string, force bool) error {
 	oldPath := m.getProfilePath(oldName)
 	newPath := m.getProfilePath(newName)
-	
+
 	if _, err := os.Stat(oldPath); os.IsNotExist(err) {
 		return fmt.Errorf("プロファイル '%s' が見つかりません", oldName)
 	}
-	
+
 	if _, err := os.Stat(newPath); err == nil && !force {
 		return fmt.Errorf("プロファイル '%s' は既に存在します。別の名前を指定するか、--force オプションで上書きしてください", newName)
 	}
-	
+
 	profile, err := m.Load(oldName)
 	if err != nil {
 		return err
 	}
-	
+
 	profile.Name = newName
 	profile.UpdatedAt = time.Now()
-	
+
 	if err := m.saveProfile(profile); err != nil {
 		return err
 	}
-	
+
 	if err := os.Remove(oldPath); err != nil {
 		return fmt.Errorf("古いプロファイルの削除に失敗しました: %w", err)
 	}
-	
+
 	fmt.Printf("プロファイル '%s' を '%s' に変更しました\n", oldName, newName)
 	return nil
 }
 
-
 func (m *Manager) Load(name string) (*Profile, error) {
 	profilePath := m.getProfilePath(name)
-	
+
 	profile := &Profile{}
 	if err := utils.LoadJSON(profilePath, profile); err != nil {
 		if os.IsNotExist(err) {
@@ -330,7 +334,7 @@ func (m *Manager) Load(name string) (*Profile, error) {
 		}
 		return nil, fmt.Errorf("プロファイルの読み込みに失敗しました: %w", err)
 	}
-	
+
 	return profile, nil
 }
 
@@ -348,33 +352,33 @@ func (m *Manager) AddServer(profileName, templateName, serverName string, envOve
 	if err != nil {
 		return err
 	}
-	
+
 	if serverName == "" {
 		serverName = templateName
 	}
-	
+
 	for _, server := range profile.Servers {
 		if server.Name == serverName {
 			return fmt.Errorf("サーバー名 '%s' は既にプロファイル '%s' に存在します。別の名前を指定してください（--as オプションを使用）", serverName, profileName)
 		}
 	}
-	
+
 	serverRef := ServerRef{
 		Name:     serverName,
 		Template: templateName,
 	}
-	
+
 	if len(envOverrides) > 0 {
 		serverRef.Overrides.Env = envOverrides
 	}
-	
+
 	profile.Servers = append(profile.Servers, serverRef)
 	profile.UpdatedAt = time.Now()
-	
+
 	if err := m.saveProfile(profile); err != nil {
 		return err
 	}
-	
+
 	fmt.Printf("サーバー '%s' をプロファイル '%s' に追加しました\n", serverName, profileName)
 	return nil
 }
@@ -384,20 +388,20 @@ func (m *Manager) RemoveServer(profileName, serverName string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	newServers, removedCount := m.filterServersByName(profile.Servers, serverName)
-	
+
 	if removedCount == 0 {
 		return fmt.Errorf("サーバー '%s' がプロファイル '%s' に見つかりません", serverName, profileName)
 	}
-	
+
 	profile.Servers = newServers
 	profile.UpdatedAt = time.Now()
-	
+
 	if err := m.saveProfile(profile); err != nil {
 		return err
 	}
-	
+
 	fmt.Printf("サーバー '%s' をプロファイル '%s' から削除しました\n", serverName, profileName)
 	return nil
 }
@@ -405,7 +409,7 @@ func (m *Manager) RemoveServer(profileName, serverName string) error {
 func (m *Manager) filterServersByName(servers []ServerRef, serverName string) ([]ServerRef, int) {
 	newServers := []ServerRef{}
 	removedCount := 0
-	
+
 	for _, server := range servers {
 		if server.Name != serverName {
 			newServers = append(newServers, server)
@@ -413,17 +417,17 @@ func (m *Manager) filterServersByName(servers []ServerRef, serverName string) ([
 			removedCount++
 		}
 	}
-	
+
 	return newServers, removedCount
 }
 
 func (m *Manager) GetProfilePath(name string) (string, error) {
 	profilePath := m.getProfilePath(name)
-	
+
 	if _, err := os.Stat(profilePath); os.IsNotExist(err) {
 		return "", fmt.Errorf("プロファイル '%s' が見つかりません", name)
 	}
-	
+
 	return profilePath, nil
 }
 
@@ -432,24 +436,24 @@ func (m *Manager) Reset(force bool) error {
 		fmt.Println("プロファイルディレクトリが存在しません")
 		return nil
 	}
-	
+
 	files, err := os.ReadDir(m.profilesDir)
 	if err != nil {
 		return fmt.Errorf("プロファイルディレクトリの読み込みに失敗しました: %w", err)
 	}
-	
+
 	profileFiles := []string{}
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), config.FileExtension) {
 			profileFiles = append(profileFiles, file.Name())
 		}
 	}
-	
+
 	if len(profileFiles) == 0 {
 		fmt.Println("削除するプロファイルが存在しません")
 		return nil
 	}
-	
+
 	if !force {
 		fmt.Printf("以下の%d個のプロファイルを削除します:\n", len(profileFiles))
 		for _, file := range profileFiles {
@@ -457,13 +461,13 @@ func (m *Manager) Reset(force bool) error {
 			fmt.Printf("  - %s\n", name)
 		}
 		fmt.Println()
-		
+
 		if !interaction.Confirm("すべてのプロファイルを削除しますか？") {
 			fmt.Println("リセットをキャンセルしました")
 			return nil
 		}
 	}
-	
+
 	deletedCount := 0
 	for _, file := range profileFiles {
 		profilePath := filepath.Join(m.profilesDir, file)
@@ -473,7 +477,7 @@ func (m *Manager) Reset(force bool) error {
 			deletedCount++
 		}
 	}
-	
+
 	fmt.Printf("プロファイルを%d個削除しました\n", deletedCount)
 	return nil
 }
@@ -484,20 +488,20 @@ func (m *Manager) FindProfilesUsingTemplate(templateName string) ([]string, erro
 	if err != nil {
 		return nil, fmt.Errorf("プロファイルディレクトリの読み込みに失敗しました: %w", err)
 	}
-	
+
 	var usingProfiles []string
-	
+
 	for _, file := range files {
 		if !strings.HasSuffix(file.Name(), config.FileExtension) {
 			continue
 		}
-		
+
 		profileName := strings.TrimSuffix(file.Name(), config.FileExtension)
 		profile, err := m.Load(profileName)
 		if err != nil {
 			continue // 読み込みに失敗したプロファイルはスキップ
 		}
-		
+
 		// プロファイル内のサーバーで指定されたテンプレートを使用しているかチェック
 		for _, server := range profile.Servers {
 			if server.Template == templateName {
@@ -506,7 +510,7 @@ func (m *Manager) FindProfilesUsingTemplate(templateName string) ([]string, erro
 			}
 		}
 	}
-	
+
 	return usingProfiles, nil
 }
 
@@ -516,20 +520,20 @@ func (m *Manager) RemoveTemplateReferencesFromProfile(profileName, templateName 
 	if err != nil {
 		return err
 	}
-	
+
 	newServers, removedCount := m.filterServersByTemplate(profile.Servers, templateName)
-	
+
 	if removedCount == 0 {
 		return nil
 	}
-	
+
 	profile.Servers = newServers
 	profile.UpdatedAt = time.Now()
-	
+
 	if err := m.saveProfile(profile); err != nil {
 		return err
 	}
-	
+
 	fmt.Printf("プロファイル '%s' からサーバーテンプレート '%s' の参照を%d個削除しました\n", profileName, templateName, removedCount)
 	return nil
 }
@@ -537,7 +541,7 @@ func (m *Manager) RemoveTemplateReferencesFromProfile(profileName, templateName 
 func (m *Manager) filterServersByTemplate(servers []ServerRef, templateName string) ([]ServerRef, int) {
 	newServers := []ServerRef{}
 	removedCount := 0
-	
+
 	for _, server := range servers {
 		if server.Template != templateName {
 			newServers = append(newServers, server)
@@ -545,7 +549,7 @@ func (m *Manager) filterServersByTemplate(servers []ServerRef, templateName stri
 			removedCount++
 		}
 	}
-	
+
 	return newServers, removedCount
 }
 
@@ -555,7 +559,7 @@ func (m *Manager) RemoveTemplateReferencesFromAllProfiles(templateName string) e
 	if err != nil {
 		return err
 	}
-	
+
 	totalRemoved := 0
 	for _, profileName := range usingProfiles {
 		if err := m.RemoveTemplateReferencesFromProfile(profileName, templateName); err != nil {
@@ -564,13 +568,10 @@ func (m *Manager) RemoveTemplateReferencesFromAllProfiles(templateName string) e
 			totalRemoved++
 		}
 	}
-	
+
 	if totalRemoved > 0 {
 		fmt.Printf("合計%d個のプロファイルからサーバーテンプレート '%s' の参照を削除しました\n", totalRemoved, templateName)
 	}
-	
+
 	return nil
 }
-
-
-

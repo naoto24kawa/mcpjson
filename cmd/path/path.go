@@ -30,7 +30,7 @@ var PathCmd = &cobra.Command{
 			return fmt.Errorf("プロファイルパスの取得に失敗しました: %w", err)
 		}
 
-		fmt.Print(profilePath)
+		cmd.Print(profilePath)
 		return nil
 	},
 }

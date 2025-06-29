@@ -95,9 +95,9 @@ type ProfileData struct {
 
 // ServerRef represents a server reference in a profile
 type ServerRef struct {
-	Name      string           `json:"name"`
-	Template  string           `json:"template"`
-	Overrides ServerOverrides  `json:"overrides,omitempty"`
+	Name      string          `json:"name"`
+	Template  string          `json:"template"`
+	Overrides ServerOverrides `json:"overrides,omitempty"`
 }
 
 // ServerOverrides represents environment variable overrides

@@ -1,8 +1,11 @@
 package create
 
 import (
+	"fmt"
+	"math/rand"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/naoto24kawa/mcpconfig/internal/config"
 	"github.com/naoto24kawa/mcpconfig/internal/profile"
@@ -38,31 +41,34 @@ func setupTestEnvironment(t *testing.T) (string, func()) {
 }
 
 func TestExecute(t *testing.T) {
+	rand.Seed(time.Now().UnixNano())
+	testID := rand.Intn(10000)
+
 	tests := []struct {
-		name      string
-		args      []string
-		setup     func(cfg *config.Config)
+		name  string
+		args  []string
+		setup func(cfg *config.Config)
 	}{
 		{
 			name: "特定プロファイルの作成",
-			args: []string{"test-profile"},
+			args: []string{fmt.Sprintf("test-profile-%d-1", testID)},
 			setup: func(cfg *config.Config) {
 			},
 		},
 		{
 			name: "テンプレート指定でのプロファイル作成",
-			args: []string{"test-profile2", "--template", "test-template"},
+			args: []string{fmt.Sprintf("test-profile-%d-2", testID), "--template", fmt.Sprintf("test-template-%d-2", testID)},
 			setup: func(cfg *config.Config) {
 				serverManager := server.NewManager(cfg.ServersDir)
-				_ = serverManager.SaveManual("test-template", "python", []string{"test.py"}, nil, false)
+				_ = serverManager.SaveManual(fmt.Sprintf("test-template-%d-2", testID), "python", []string{"test.py"}, nil, false)
 			},
 		},
 		{
 			name: "テンプレート指定（短縮形）でのプロファイル作成",
-			args: []string{"test-profile3", "-t", "test-template"},
+			args: []string{fmt.Sprintf("test-profile-%d-3", testID), "-t", fmt.Sprintf("test-template-%d-3", testID)},
 			setup: func(cfg *config.Config) {
 				serverManager := server.NewManager(cfg.ServersDir)
-				_ = serverManager.SaveManual("test-template", "python", []string{"test.py"}, nil, false)
+				_ = serverManager.SaveManual(fmt.Sprintf("test-template-%d-3", testID), "python", []string{"test.py"}, nil, false)
 			},
 		},
 	}
@@ -93,4 +99,3 @@ func TestExecute(t *testing.T) {
 		})
 	}
 }
-

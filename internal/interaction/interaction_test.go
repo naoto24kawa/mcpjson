@@ -100,7 +100,7 @@ func TestConfirmWithMockStdin(t *testing.T) {
 		{
 			name:    "空入力でfalse",
 			input:   "\n",
-			message: "テスト確認", 
+			message: "テスト確認",
 			want:    false,
 		},
 	}

@@ -11,33 +11,32 @@ import (
 )
 
 const (
-	testProfileName    = "test-profile"
-	testTemplateName   = "test-template"
-	testServerName     = "test-server"
-	testDescription    = "テスト用プロファイル"
-	oldProfileName     = "old-profile"
-	newProfileName     = "new-profile"
-	duplicateServerName = "duplicate-server"
+	testProfileName      = "test-profile"
+	testTemplateName     = "test-template"
+	testServerName       = "test-server"
+	testDescription      = "テスト用プロファイル"
+	oldProfileName       = "old-profile"
+	newProfileName       = "new-profile"
+	duplicateServerName  = "duplicate-server"
 	templateNameForEmpty = "template-name"
 )
-
 
 // createTestMCPConfig creates a test MCP configuration file
 func createTestMCPConfig(t *testing.T, filePath string, config *server.MCPConfig) {
 	t.Helper()
-	
+
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(filePath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		t.Fatalf("Failed to create directory %s: %v", dir, err)
 	}
-	
+
 	file, err := os.Create(filePath)
 	if err != nil {
 		t.Fatalf("Failed to create test MCP config file: %v", err)
 	}
 	defer file.Close()
-	
+
 	encoder := json.NewEncoder(file)
 	if err := encoder.Encode(config); err != nil {
 		t.Fatalf("Failed to write test MCP config: %v", err)
@@ -362,7 +361,7 @@ func TestManager_Reset_NonexistentDirectory(t *testing.T) {
 // リネーム検証用ヘルパー関数
 func verifyRenameSuccess(t *testing.T, manager *Manager, tempDir, oldName, newName string) {
 	t.Helper()
-	
+
 	// 新しい名前のファイルが存在することを確認
 	newPath := filepath.Join(tempDir, newName+".jsonc")
 	if _, err := os.Stat(newPath); os.IsNotExist(err) {
@@ -422,7 +421,7 @@ func TestManager_Rename_ForceOverwrite(t *testing.T) {
 	// Arrange
 	tempDir := t.TempDir()
 	manager := NewManager(tempDir)
-	
+
 	// 古いプロファイルと既存の新しいプロファイルを作成
 	err := manager.Create(oldProfileName, "古いプロファイル")
 	if err != nil {
@@ -447,7 +446,7 @@ func TestManager_Rename_ConflictWithoutForce(t *testing.T) {
 	// Arrange
 	tempDir := t.TempDir()
 	manager := NewManager(tempDir)
-	
+
 	// 古いプロファイルと既存の新しいプロファイルを作成
 	err := manager.Create(oldProfileName, "古いプロファイル")
 	if err != nil {
@@ -594,7 +593,7 @@ func TestManager_Save_BasicFlow(t *testing.T) {
 	tempDir := t.TempDir()
 	profilesDir := filepath.Join(tempDir, "profiles")
 	serversDir := filepath.Join(tempDir, "servers")
-	
+
 	// ディレクトリを作成
 	if err := os.MkdirAll(profilesDir, 0755); err != nil {
 		t.Fatalf("Failed to create profiles directory: %v", err)
@@ -602,10 +601,10 @@ func TestManager_Save_BasicFlow(t *testing.T) {
 	if err := os.MkdirAll(serversDir, 0755); err != nil {
 		t.Fatalf("Failed to create servers directory: %v", err)
 	}
-	
+
 	manager := NewManager(profilesDir)
 	serverManager := server.NewManager(serversDir)
-	
+
 	mcpConfigPath := filepath.Join(tempDir, "mcp_config.json")
 	testConfig := &server.MCPConfig{
 		McpServers: map[string]server.MCPServer{
@@ -617,33 +616,33 @@ func TestManager_Save_BasicFlow(t *testing.T) {
 		},
 	}
 	createTestMCPConfig(t, mcpConfigPath, testConfig)
-	
+
 	// Act
 	err := manager.Save("test-profile", mcpConfigPath, serverManager, false)
-	
+
 	// Assert
 	if err != nil {
 		t.Errorf("Manager.Save() failed: %v", err)
 	}
-	
+
 	// プロファイルが正しく保存されているか確認
 	profile, err := manager.Load("test-profile")
 	if err != nil {
 		t.Fatalf("Failed to load saved profile: %v", err)
 	}
-	
+
 	if profile.Name != "test-profile" {
 		t.Errorf("Profile name mismatch: got %s, want test-profile", profile.Name)
 	}
-	
+
 	if len(profile.Servers) != 1 {
 		t.Errorf("Expected 1 server, got %d", len(profile.Servers))
 	}
-	
+
 	if profile.Servers[0].Name != "test-server" {
 		t.Errorf("Server name mismatch: got %s, want test-server", profile.Servers[0].Name)
 	}
-	
+
 	// サーバーテンプレートが作成されているかも確認
 	exists, err := serverManager.Exists("test-server")
 	if err != nil {
@@ -659,23 +658,23 @@ func TestManager_Save_WithForceOverwrite(t *testing.T) {
 	tempDir := t.TempDir()
 	profilesDir := filepath.Join(tempDir, "profiles")
 	serversDir := filepath.Join(tempDir, "servers")
-	
+
 	if err := os.MkdirAll(profilesDir, 0755); err != nil {
 		t.Fatalf("Failed to create profiles directory: %v", err)
 	}
 	if err := os.MkdirAll(serversDir, 0755); err != nil {
 		t.Fatalf("Failed to create servers directory: %v", err)
 	}
-	
+
 	manager := NewManager(profilesDir)
 	serverManager := server.NewManager(serversDir)
-	
+
 	// 既存のプロファイルを作成
 	err := manager.Create("existing-profile", "既存のプロファイル")
 	if err != nil {
 		t.Fatalf("Failed to create existing profile: %v", err)
 	}
-	
+
 	mcpConfigPath := filepath.Join(tempDir, "mcp_config.json")
 	testConfig := &server.MCPConfig{
 		McpServers: map[string]server.MCPServer{
@@ -686,21 +685,21 @@ func TestManager_Save_WithForceOverwrite(t *testing.T) {
 		},
 	}
 	createTestMCPConfig(t, mcpConfigPath, testConfig)
-	
+
 	// Act
 	err = manager.Save("existing-profile", mcpConfigPath, serverManager, true)
-	
+
 	// Assert
 	if err != nil {
 		t.Errorf("Manager.Save() with force failed: %v", err)
 	}
-	
+
 	// プロファイルが上書きされているか確認
 	profile, err := manager.Load("existing-profile")
 	if err != nil {
 		t.Fatalf("Failed to load overwritten profile: %v", err)
 	}
-	
+
 	if len(profile.Servers) != 1 || profile.Servers[0].Name != "new-server" {
 		t.Errorf("Profile was not overwritten correctly: %v", profile.Servers)
 	}
@@ -711,22 +710,22 @@ func TestManager_Save_MCPConfigLoadError(t *testing.T) {
 	tempDir := t.TempDir()
 	profilesDir := filepath.Join(tempDir, "profiles")
 	serversDir := filepath.Join(tempDir, "servers")
-	
+
 	if err := os.MkdirAll(profilesDir, 0755); err != nil {
 		t.Fatalf("Failed to create profiles directory: %v", err)
 	}
 	if err := os.MkdirAll(serversDir, 0755); err != nil {
 		t.Fatalf("Failed to create servers directory: %v", err)
 	}
-	
+
 	manager := NewManager(profilesDir)
 	serverManager := server.NewManager(serversDir)
-	
+
 	nonexistentPath := filepath.Join(tempDir, "nonexistent.json")
-	
+
 	// Act
 	err := manager.Save("test-profile", nonexistentPath, serverManager, false)
-	
+
 	// Assert
 	if err == nil {
 		t.Error("Manager.Save() expected error for nonexistent MCP config, got nil")
@@ -738,32 +737,32 @@ func TestManager_Save_ProfileExistsWithoutForce(t *testing.T) {
 	tempDir := t.TempDir()
 	profilesDir := filepath.Join(tempDir, "profiles")
 	serversDir := filepath.Join(tempDir, "servers")
-	
+
 	if err := os.MkdirAll(profilesDir, 0755); err != nil {
 		t.Fatalf("Failed to create profiles directory: %v", err)
 	}
 	if err := os.MkdirAll(serversDir, 0755); err != nil {
 		t.Fatalf("Failed to create servers directory: %v", err)
 	}
-	
+
 	manager := NewManager(profilesDir)
 	serverManager := server.NewManager(serversDir)
-	
+
 	// 既存のプロファイルを作成
 	err := manager.Create("existing-profile", "既存のプロファイル")
 	if err != nil {
 		t.Fatalf("Failed to create existing profile: %v", err)
 	}
-	
+
 	mcpConfigPath := filepath.Join(tempDir, "mcp_config.json")
 	testConfig := &server.MCPConfig{
 		McpServers: map[string]server.MCPServer{},
 	}
 	createTestMCPConfig(t, mcpConfigPath, testConfig)
-	
+
 	// Act
 	err = manager.Save("existing-profile", mcpConfigPath, serverManager, false)
-	
+
 	// Assert
 	if err == nil {
 		t.Error("Manager.Save() expected error for existing profile without force, got nil")
@@ -775,17 +774,17 @@ func TestManager_Apply_BasicFlow(t *testing.T) {
 	tempDir := t.TempDir()
 	profilesDir := filepath.Join(tempDir, "profiles")
 	serversDir := filepath.Join(tempDir, "servers")
-	
+
 	if err := os.MkdirAll(profilesDir, 0755); err != nil {
 		t.Fatalf("Failed to create profiles directory: %v", err)
 	}
 	if err := os.MkdirAll(serversDir, 0755); err != nil {
 		t.Fatalf("Failed to create servers directory: %v", err)
 	}
-	
+
 	manager := NewManager(profilesDir)
 	serverManager := server.NewManager(serversDir)
-	
+
 	// サーバーテンプレートを先に作成
 	err := serverManager.SaveFromConfig("test-template", server.MCPServer{
 		Command: "python",
@@ -795,7 +794,7 @@ func TestManager_Apply_BasicFlow(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create server template: %v", err)
 	}
-	
+
 	// テスト用プロファイルを作成
 	profile := &Profile{
 		Name:        "test-profile",
@@ -809,27 +808,27 @@ func TestManager_Apply_BasicFlow(t *testing.T) {
 			},
 		},
 	}
-	
+
 	// プロファイルを保存
 	if err := manager.saveProfile(profile); err != nil {
 		t.Fatalf("Failed to save test profile: %v", err)
 	}
-	
+
 	targetPath := filepath.Join(tempDir, "output_config.json")
-	
+
 	// Act
 	err = manager.Apply("test-profile", targetPath, serverManager)
-	
+
 	// Assert
 	if err != nil {
 		t.Errorf("Manager.Apply() failed: %v", err)
 	}
-	
+
 	// 出力されたMCP設定ファイルを確認
 	if _, err := os.Stat(targetPath); os.IsNotExist(err) {
 		t.Errorf("Output MCP config file was not created: %s", targetPath)
 	}
-	
+
 	// ファイルの内容を確認
 	var mcpConfig server.MCPConfig
 	file, err := os.Open(targetPath)
@@ -837,17 +836,17 @@ func TestManager_Apply_BasicFlow(t *testing.T) {
 		t.Fatalf("Failed to open output file: %v", err)
 	}
 	defer file.Close()
-	
+
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&mcpConfig); err != nil {
 		t.Fatalf("Failed to decode output file: %v", err)
 	}
-	
+
 	// MCPConfigの内容を確認
 	if len(mcpConfig.McpServers) != 1 {
 		t.Errorf("Expected 1 server in MCP config, got %d", len(mcpConfig.McpServers))
 	}
-	
+
 	testServer, exists := mcpConfig.McpServers["test-server"]
 	if !exists {
 		t.Error("test-server not found in MCP config")
@@ -869,22 +868,22 @@ func TestManager_Apply_ProfileNotFound(t *testing.T) {
 	tempDir := t.TempDir()
 	profilesDir := filepath.Join(tempDir, "profiles")
 	serversDir := filepath.Join(tempDir, "servers")
-	
+
 	if err := os.MkdirAll(profilesDir, 0755); err != nil {
 		t.Fatalf("Failed to create profiles directory: %v", err)
 	}
 	if err := os.MkdirAll(serversDir, 0755); err != nil {
 		t.Fatalf("Failed to create servers directory: %v", err)
 	}
-	
+
 	manager := NewManager(profilesDir)
 	serverManager := server.NewManager(serversDir)
-	
+
 	targetPath := filepath.Join(tempDir, "output_config.json")
-	
+
 	// Act
 	err := manager.Apply("nonexistent-profile", targetPath, serverManager)
-	
+
 	// Assert
 	if err == nil {
 		t.Error("Manager.Apply() expected error for nonexistent profile, got nil")

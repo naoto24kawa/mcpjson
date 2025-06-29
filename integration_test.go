@@ -16,12 +16,12 @@ func TestIntegration_ProfileAndServerWorkflow(t *testing.T) {
 	tempDir := t.TempDir()
 	profilesDir := filepath.Join(tempDir, "profiles")
 	serversDir := filepath.Join(tempDir, "servers")
-	
+
 	err := os.MkdirAll(profilesDir, 0755)
 	if err != nil {
 		t.Fatalf("プロファイルディレクトリ作成に失敗: %v", err)
 	}
-	
+
 	err = os.MkdirAll(serversDir, 0755)
 	if err != nil {
 		t.Fatalf("サーバーディレクトリ作成に失敗: %v", err)
@@ -141,7 +141,7 @@ func TestIntegration_ProfileAndServerWorkflow(t *testing.T) {
 	// 5. プロファイルの適用テスト
 	t.Run("プロファイル適用", func(t *testing.T) {
 		outputPath := filepath.Join(tempDir, "output-mcp-config.json")
-		
+
 		err := profileManager.Apply("test-profile", outputPath, serverManager)
 		if err != nil {
 			t.Errorf("プロファイル適用に失敗: %v", err)

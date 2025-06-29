@@ -33,7 +33,7 @@ func Execute(cfg *config.Config, args []string) {
 
 	serverManager := server.NewManager(cfg.ServersDir)
 	profileManager := profile.NewManager(cfg.ProfilesDir)
-	
+
 	if err := serverManager.Delete(templateName, force, profileManager); err != nil {
 		fmt.Fprintln(os.Stderr, "エラー:", err)
 		os.Exit(utils.ExitGeneralError)

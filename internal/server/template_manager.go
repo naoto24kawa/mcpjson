@@ -210,11 +210,11 @@ func (tm *TemplateManager) performRename(template *ServerTemplate, oldName, newN
 // GetTemplatePath returns the file path for a server template
 func (tm *TemplateManager) GetTemplatePath(name string) (string, error) {
 	templatePath := tm.getTemplatePath(name)
-	
+
 	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
 		return "", fmt.Errorf("サーバーテンプレート '%s' が見つかりません", name)
 	}
-	
+
 	return templatePath, nil
 }
 
@@ -237,24 +237,24 @@ func (tm *TemplateManager) Reset(force bool) error {
 		fmt.Println("サーバーテンプレートディレクトリが存在しません")
 		return nil
 	}
-	
+
 	files, err := os.ReadDir(tm.serversDir)
 	if err != nil {
 		return fmt.Errorf("サーバーテンプレートディレクトリの読み込みに失敗しました: %w", err)
 	}
-	
+
 	templateFiles := []string{}
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), config.FileExtension) {
 			templateFiles = append(templateFiles, file.Name())
 		}
 	}
-	
+
 	if len(templateFiles) == 0 {
 		fmt.Println("削除するサーバーテンプレートが存在しません")
 		return nil
 	}
-	
+
 	if !force {
 		fmt.Printf("以下の%d個のサーバーテンプレートを削除します:\n", len(templateFiles))
 		for _, file := range templateFiles {
@@ -262,13 +262,13 @@ func (tm *TemplateManager) Reset(force bool) error {
 			fmt.Printf("  - %s\n", name)
 		}
 		fmt.Println()
-		
+
 		if !interaction.Confirm("すべてのサーバーテンプレートを削除しますか？") {
 			fmt.Println("リセットをキャンセルしました")
 			return nil
 		}
 	}
-	
+
 	deletedCount := 0
 	for _, file := range templateFiles {
 		templatePath := filepath.Join(tm.serversDir, file)
@@ -278,7 +278,7 @@ func (tm *TemplateManager) Reset(force bool) error {
 			deletedCount++
 		}
 	}
-	
+
 	fmt.Printf("サーバーテンプレートを%d個削除しました\n", deletedCount)
 	return nil
 }

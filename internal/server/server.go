@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	ListColumnWidth     = 20
-	TimestampFormat     = "2006-01-02 15:04:05"
+	ListColumnWidth = 20
+	TimestampFormat = "2006-01-02 15:04:05"
 )
 
 type ServerTemplate struct {
@@ -19,15 +19,7 @@ type ServerTemplate struct {
 	ServerConfig ServerConfig `json:"serverConfig"`
 }
 
-type ServerConfig struct {
-	Command       string            `json:"command"`
-	Args          []string          `json:"args,omitempty"`
-	Env           map[string]string `json:"env,omitempty"`
-	Timeout       *int              `json:"timeout,omitempty"`
-	EnvFile       *string           `json:"envFile,omitempty"`
-	TransportType *string           `json:"transportType,omitempty"`
-}
-
+// MCPServer represents a server configuration for MCP settings
 type MCPServer struct {
 	Command       string            `json:"command"`
 	Args          []string          `json:"args,omitempty"`
@@ -36,6 +28,9 @@ type MCPServer struct {
 	EnvFile       *string           `json:"envFile,omitempty"`
 	TransportType *string           `json:"transportType,omitempty"`
 }
+
+// ServerConfig is an alias for MCPServer to maintain compatibility
+type ServerConfig = MCPServer
 
 type MCPConfig struct {
 	McpServers map[string]MCPServer `json:"mcpServers"`
@@ -68,7 +63,6 @@ func (m *Manager) SaveManual(templateName, command string, args []string, env ma
 	return m.templateUpdater.SaveManual(templateName, command, args, env, force)
 }
 
-
 // List displays all server templates
 func (m *Manager) List(detail bool) error {
 	return m.templateDisplay.List(detail)
@@ -86,45 +80,75 @@ func (m *Manager) Rename(oldName, newName string, force bool) error {
 
 // AddToMCPConfig adds a server from template to an MCP config file
 func (m *Manager) AddToMCPConfig(mcpConfigPath, templateName, serverName string, envOverrides map[string]string) error {
-	// テンプレートを読み込む
+	template, err := m.loadTemplate(templateName)
+	if err != nil {
+		return err
+	}
+
+	mcpConfig, err := m.loadOrCreateMCPConfig(mcpConfigPath)
+	if err != nil {
+		return err
+	}
+
+	serverName = m.resolveServerName(serverName, templateName)
+
+	if err := m.validateServerNotExists(mcpConfig, serverName); err != nil {
+		return err
+	}
+
+	mcpServer := m.buildMCPServer(template, envOverrides)
+	mcpConfig.McpServers[serverName] = mcpServer
+
+	if err := m.saveMCPConfig(mcpConfig, mcpConfigPath); err != nil {
+		return err
+	}
+
+	m.printAddSuccess(serverName, mcpConfigPath)
+	return nil
+}
+
+func (m *Manager) loadTemplate(templateName string) (*ServerTemplate, error) {
 	template, err := m.templateManager.Load(templateName)
 	if err != nil {
-		return fmt.Errorf("テンプレート '%s' の読み込みに失敗しました: %w", templateName, err)
+		return nil, fmt.Errorf("テンプレート '%s' の読み込みに失敗しました: %w", templateName, err)
 	}
-	
-	// MCP設定ファイルを読み込む（存在しない場合は新規作成）
+	return template, nil
+}
+
+func (m *Manager) loadOrCreateMCPConfig(mcpConfigPath string) (*MCPConfig, error) {
 	mcpConfig := &MCPConfig{McpServers: make(map[string]MCPServer)}
+
 	if utils.FileExists(mcpConfigPath) {
 		if err := utils.LoadJSON(mcpConfigPath, mcpConfig); err != nil {
-			return fmt.Errorf("MCP設定ファイルの読み込みに失敗しました: %w", err)
+			return nil, fmt.Errorf("MCP設定ファイルの読み込みに失敗しました: %w", err)
 		}
 	}
-	
+
 	if mcpConfig.McpServers == nil {
 		mcpConfig.McpServers = make(map[string]MCPServer)
 	}
-	
-	// サーバー名が未指定の場合はテンプレート名を使用
+
+	return mcpConfig, nil
+}
+
+func (m *Manager) resolveServerName(serverName, templateName string) string {
 	if serverName == "" {
-		serverName = templateName
+		return templateName
 	}
-	
-	// 既に存在するかチェック
+	return serverName
+}
+
+func (m *Manager) validateServerNotExists(mcpConfig *MCPConfig, serverName string) error {
 	if _, exists := mcpConfig.McpServers[serverName]; exists {
 		return fmt.Errorf("サーバー '%s' は既にMCP設定ファイルに存在します", serverName)
 	}
-	
-	// 環境変数をマージ
-	env := make(map[string]string)
-	for k, v := range template.ServerConfig.Env {
-		env[k] = v
-	}
-	for k, v := range envOverrides {
-		env[k] = v
-	}
-	
-	// MCPサーバー設定を作成
-	mcpServer := MCPServer{
+	return nil
+}
+
+func (m *Manager) buildMCPServer(template *ServerTemplate, envOverrides map[string]string) MCPServer {
+	env := m.mergeEnvironmentVariables(template.ServerConfig.Env, envOverrides)
+
+	return MCPServer{
 		Command:       template.ServerConfig.Command,
 		Args:          template.ServerConfig.Args,
 		Env:           env,
@@ -132,17 +156,30 @@ func (m *Manager) AddToMCPConfig(mcpConfigPath, templateName, serverName string,
 		EnvFile:       template.ServerConfig.EnvFile,
 		TransportType: template.ServerConfig.TransportType,
 	}
-	
-	// サーバーを追加
-	mcpConfig.McpServers[serverName] = mcpServer
-	
-	// ファイルに保存
+}
+
+func (m *Manager) mergeEnvironmentVariables(templateEnv, overrides map[string]string) map[string]string {
+	env := make(map[string]string)
+
+	for k, v := range templateEnv {
+		env[k] = v
+	}
+	for k, v := range overrides {
+		env[k] = v
+	}
+
+	return env
+}
+
+func (m *Manager) saveMCPConfig(mcpConfig *MCPConfig, mcpConfigPath string) error {
 	if err := utils.SaveJSON(mcpConfigPath, mcpConfig); err != nil {
 		return fmt.Errorf("MCP設定ファイルの保存に失敗しました: %w", err)
 	}
-	
-	fmt.Printf("サーバー '%s' をMCP設定ファイルに追加しました: %s\n", serverName, mcpConfigPath)
 	return nil
+}
+
+func (m *Manager) printAddSuccess(serverName, mcpConfigPath string) {
+	fmt.Printf("サーバー '%s' をMCP設定ファイルに追加しました: %s\n", serverName, mcpConfigPath)
 }
 
 // RemoveFromMCPConfig removes a server from an MCP config file
@@ -152,25 +189,25 @@ func (m *Manager) RemoveFromMCPConfig(mcpConfigPath, serverName string) error {
 	if err := utils.LoadJSON(mcpConfigPath, mcpConfig); err != nil {
 		return fmt.Errorf("MCP設定ファイルの読み込みに失敗しました: %w", err)
 	}
-	
+
 	// サーバーが存在するかチェック
 	if _, exists := mcpConfig.McpServers[serverName]; !exists {
 		availableServers := make([]string, 0, len(mcpConfig.McpServers))
 		for name := range mcpConfig.McpServers {
 			availableServers = append(availableServers, name)
 		}
-		return fmt.Errorf("サーバー '%s' がMCP設定ファイルに見つかりません\nファイル: %s\n利用可能なサーバー: %v", 
+		return fmt.Errorf("サーバー '%s' がMCP設定ファイルに見つかりません\nファイル: %s\n利用可能なサーバー: %v",
 			serverName, mcpConfigPath, availableServers)
 	}
-	
+
 	// サーバーを削除
 	delete(mcpConfig.McpServers, serverName)
-	
+
 	// ファイルに保存
 	if err := utils.SaveJSON(mcpConfigPath, mcpConfig); err != nil {
 		return fmt.Errorf("MCP設定ファイルの保存に失敗しました: %w", err)
 	}
-	
+
 	fmt.Printf("サーバー '%s' をMCP設定ファイルから削除しました: %s\n", serverName, mcpConfigPath)
 	return nil
 }
@@ -180,7 +217,7 @@ func (m *Manager) Show(mcpConfigPath string, serverName string) error {
 	if err := utils.LoadJSON(mcpConfigPath, mcpConfig); err != nil {
 		return fmt.Errorf("MCP設定ファイルの読み込みに失敗しました: %w", err)
 	}
-	
+
 	if serverName != "" {
 		server, exists := mcpConfig.McpServers[serverName]
 		if !exists {
@@ -188,10 +225,10 @@ func (m *Manager) Show(mcpConfigPath string, serverName string) error {
 			for name := range mcpConfig.McpServers {
 				availableServers = append(availableServers, name)
 			}
-			return fmt.Errorf("MCPサーバー '%s' がMCP設定ファイルに見つかりません\nファイル: %s\n利用可能なサーバー: %v", 
+			return fmt.Errorf("MCPサーバー '%s' がMCP設定ファイルに見つかりません\nファイル: %s\n利用可能なサーバー: %v",
 				serverName, mcpConfigPath, availableServers)
 		}
-		
+
 		fmt.Printf("サーバー名: %s\n", serverName)
 		fmt.Printf("  コマンド: %s\n", server.Command)
 		if len(server.Args) > 0 {
@@ -208,7 +245,7 @@ func (m *Manager) Show(mcpConfigPath string, serverName string) error {
 			fmt.Println("MCPサーバーが設定されていません")
 			return nil
 		}
-		
+
 		for name, server := range mcpConfig.McpServers {
 			fmt.Printf("サーバー名: %s\n", name)
 			fmt.Printf("  コマンド: %s\n", server.Command)
@@ -224,7 +261,7 @@ func (m *Manager) Show(mcpConfigPath string, serverName string) error {
 			fmt.Println()
 		}
 	}
-	
+
 	return nil
 }
 
@@ -252,4 +289,3 @@ func (m *Manager) Reset(force bool) error {
 func (m *Manager) GetTemplatePath(name string) (string, error) {
 	return m.templateManager.GetTemplatePath(name)
 }
-

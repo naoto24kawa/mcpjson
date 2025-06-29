@@ -9,14 +9,14 @@ import (
 func TestNew(t *testing.T) {
 	// テスト用の一時ホームディレクトリを設定
 	tempDir := t.TempDir()
-	
+
 	// WindowsとUnixで環境変数を適切に設定
 	originalHome := os.Getenv("HOME")
 	originalUserProfile := os.Getenv("USERPROFILE")
-	
+
 	os.Setenv("HOME", tempDir)
 	os.Setenv("USERPROFILE", tempDir)
-	
+
 	defer func() {
 		os.Setenv("HOME", originalHome)
 		os.Setenv("USERPROFILE", originalUserProfile)
@@ -50,7 +50,7 @@ func TestGetProfilePath(t *testing.T) {
 	// filepath.Joinを使用してOSに依存しないパスを作成
 	baseDir := filepath.Join("home", "user", ".mcpconfig")
 	profilesDir := filepath.Join(baseDir, "profiles")
-	
+
 	cfg := &Config{
 		ProfilesDir: profilesDir,
 	}
@@ -67,7 +67,7 @@ func TestGetServerPath(t *testing.T) {
 	// filepath.Joinを使用してOSに依存しないパスを作成
 	baseDir := filepath.Join("home", "user", ".mcpconfig")
 	serversDir := filepath.Join(baseDir, "servers")
-	
+
 	cfg := &Config{
 		ServersDir: serversDir,
 	}

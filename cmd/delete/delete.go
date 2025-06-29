@@ -1,8 +1,8 @@
 package delete
 
 import (
-	"github.com/naoto24kawa/mcpconfig/internal/config"
 	"github.com/naoto24kawa/mcpconfig/cmd/profile"
+	"github.com/naoto24kawa/mcpconfig/internal/config"
 	"github.com/naoto24kawa/mcpconfig/internal/utils"
 )
 

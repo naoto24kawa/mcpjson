@@ -66,4 +66,3 @@ func PrintUsage() {
   show --from <パス> [--server <サーバー名>]             設定ファイルからサーバー情報表示
   detail <サーバー名>                                   サーバーテンプレートの詳細を表示`)
 }
-

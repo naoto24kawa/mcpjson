@@ -10,7 +10,7 @@ import (
 func TestFileExists(t *testing.T) {
 	tempDir := t.TempDir()
 	existingFile := filepath.Join(tempDir, "existing.txt")
-	
+
 	// ファイルを作成
 	file, err := os.Create(existingFile)
 	if err != nil {
@@ -47,13 +47,13 @@ func TestFileExists(t *testing.T) {
 
 func TestLoadJSON(t *testing.T) {
 	tempDir := t.TempDir()
-	
+
 	// テスト用JSONファイルを作成
 	testData := map[string]interface{}{
-		"name": "test",
+		"name":  "test",
 		"value": 123,
 	}
-	
+
 	jsonFile := filepath.Join(tempDir, "test.json")
 	file, err := os.Create(jsonFile)
 	if err != nil {
@@ -106,9 +106,9 @@ func TestLoadJSON(t *testing.T) {
 
 func TestSaveJSON(t *testing.T) {
 	tempDir := t.TempDir()
-	
+
 	testData := map[string]interface{}{
-		"name": "test",
+		"name":  "test",
 		"value": 456,
 	}
 
@@ -141,7 +141,7 @@ func TestSaveJSON(t *testing.T) {
 				if err != nil {
 					t.Errorf("保存されたファイルの読み込みに失敗: %v", err)
 				}
-				
+
 				if result["name"] != "test" {
 					t.Errorf("保存されたデータのname = %v, want test", result["name"])
 				}
@@ -155,7 +155,7 @@ func TestSaveJSON(t *testing.T) {
 
 func TestLoadEnvFile(t *testing.T) {
 	tempDir := t.TempDir()
-	
+
 	// テスト用の環境変数ファイルを作成
 	envContent := `# テストコメント
 KEY1=value1
@@ -164,7 +164,7 @@ KEY3='single quoted'
 # 別のコメント
 KEY4=value with spaces
 `
-	
+
 	envFile := filepath.Join(tempDir, "test.env")
 	if err := os.WriteFile(envFile, []byte(envContent), 0644); err != nil {
 		t.Fatalf("テスト環境ファイル作成に失敗: %v", err)
@@ -209,7 +209,7 @@ KEY4=value with spaces
 						t.Errorf("LoadEnvFile() key %s = %v, want %v", key, got[key], expectedValue)
 					}
 				}
-				
+
 				// 無効な行が除外されていることを確認
 				if len(got) != len(tt.want) {
 					t.Errorf("LoadEnvFile() loaded %d keys, want %d", len(got), len(tt.want))
@@ -217,16 +217,16 @@ KEY4=value with spaces
 			}
 		})
 	}
-	
+
 	// 不正な形式のファイルのテスト
 	t.Run("不正な形式のファイル", func(t *testing.T) {
 		invalidFile := filepath.Join(tempDir, "invalid.env")
 		invalidContent := "INVALID_LINE_WITHOUT_EQUALS_AND_NO_COMMENT"
-		
+
 		if err := os.WriteFile(invalidFile, []byte(invalidContent), 0644); err != nil {
 			t.Fatalf("不正なテストファイル作成に失敗: %v", err)
 		}
-		
+
 		_, err := LoadEnvFile(invalidFile)
 		if err == nil {
 			t.Errorf("不正な形式のファイルでエラーが発生しませんでした")

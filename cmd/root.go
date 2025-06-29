@@ -21,7 +21,11 @@ import (
 
 var Version = "dev"
 
+type CommandRouter struct{}
+
 func Execute() {
+	router := &CommandRouter{}
+
 	if len(os.Args) == 1 {
 		printUsage()
 		os.Exit(0)
@@ -30,13 +34,15 @@ func Execute() {
 	cmd := os.Args[1]
 	args := os.Args[2:]
 
+	router.Route(cmd, args)
+}
+
+func (r *CommandRouter) Route(cmd string, args []string) {
 	switch cmd {
 	case "help", "-h", "--help":
-		printUsage()
-		os.Exit(0)
+		r.handleHelp()
 	case "version", "-v", "--version":
-		fmt.Printf("mcpconfig version %s\n", Version)
-		os.Exit(0)
+		r.handleVersion()
 	case "apply":
 		apply.Execute(args)
 	case "save":
@@ -50,31 +56,57 @@ func Execute() {
 	case "rename":
 		rename.Execute(args)
 	case "detail":
-		if err := detail.Execute(args); err != nil {
-			fmt.Fprintln(os.Stderr, "エラー:", err)
-			os.Exit(utils.ExitGeneralError)
-		}
+		r.handleDetail(args)
 	case "server":
-		handleServer(args)
+		r.handleServer(args)
 	case "reset":
-		handleReset(args)
+		r.handleReset(args)
 	case "path":
-		path.PathCmd.SetArgs(args)
-		if err := path.PathCmd.Execute(); err != nil {
-			fmt.Fprintln(os.Stderr, "エラー:", err)
-			os.Exit(utils.ExitGeneralError)
-		}
+		r.handlePath(args)
 	case "server-path":
-		serverpath.ServerPathCmd.SetArgs(args)
-		if err := serverpath.ServerPathCmd.Execute(); err != nil {
-			fmt.Fprintln(os.Stderr, "エラー:", err)
-			os.Exit(utils.ExitGeneralError)
-		}
+		r.handleServerPath(args)
 	default:
-		fmt.Fprintf(os.Stderr, "エラー: 不明なコマンド '%s'\n", cmd)
-		printUsage()
+		r.handleUnknownCommand(cmd)
+	}
+}
+
+func (r *CommandRouter) handleHelp() {
+	printUsage()
+	os.Exit(0)
+}
+
+func (r *CommandRouter) handleVersion() {
+	fmt.Printf("mcpconfig version %s\n", Version)
+	os.Exit(0)
+}
+
+func (r *CommandRouter) handleDetail(args []string) {
+	if err := detail.Execute(args); err != nil {
+		fmt.Fprintln(os.Stderr, "エラー:", err)
 		os.Exit(utils.ExitGeneralError)
 	}
+}
+
+func (r *CommandRouter) handlePath(args []string) {
+	path.PathCmd.SetArgs(args)
+	if err := path.PathCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, "エラー:", err)
+		os.Exit(utils.ExitGeneralError)
+	}
+}
+
+func (r *CommandRouter) handleServerPath(args []string) {
+	serverpath.ServerPathCmd.SetArgs(args)
+	if err := serverpath.ServerPathCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, "エラー:", err)
+		os.Exit(utils.ExitGeneralError)
+	}
+}
+
+func (r *CommandRouter) handleUnknownCommand(cmd string) {
+	fmt.Fprintf(os.Stderr, "エラー: 不明なコマンド '%s'\n", cmd)
+	printUsage()
+	os.Exit(utils.ExitGeneralError)
 }
 
 func printUsage() {
@@ -103,18 +135,17 @@ func printUsage() {
   --help, -h      ヘルプを表示
   --version, -v   バージョンを表示
 
-詳細は 'mcpconfig help <コマンド>' で確認してください`, 
-		config.DefaultProfileName, 
-		config.DefaultProfileName, 
-		config.DefaultProfileName, 
-		config.DefaultProfileName, 
-		config.DefaultProfileName, 
+詳細は 'mcpconfig help <コマンド>' で確認してください`,
+		config.DefaultProfileName,
+		config.DefaultProfileName,
+		config.DefaultProfileName,
+		config.DefaultProfileName,
+		config.DefaultProfileName,
 		config.DefaultProfileName,
 		config.DefaultProfileName)
 }
 
-
-func handleServer(args []string) {
+func (r *CommandRouter) handleServer(args []string) {
 	if len(args) == 0 {
 		server.PrintUsage()
 		os.Exit(0)
@@ -129,7 +160,7 @@ func handleServer(args []string) {
 	server.Execute(cfg, args)
 }
 
-func handleReset(args []string) {
+func (r *CommandRouter) handleReset(args []string) {
 	if len(args) == 0 {
 		reset.PrintUsage()
 		os.Exit(0)

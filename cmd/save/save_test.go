@@ -58,9 +58,9 @@ func createTestMCPConfig(path string) error {
 
 func TestExecute(t *testing.T) {
 	tests := []struct {
-		name      string
-		args      func(tempDir string) []string
-		setup     func(tempDir string, cfg *config.Config) error
+		name  string
+		args  func(tempDir string) []string
+		setup func(tempDir string, cfg *config.Config) error
 	}{
 		{
 			name: "MCPファイルからプロファイル保存",

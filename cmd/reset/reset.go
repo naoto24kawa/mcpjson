@@ -72,19 +72,18 @@ func PrintUsage() {
   mcpconfig reset servers            すべてのサーバーテンプレートを削除`)
 }
 
-
 func resetAll(force bool) error {
 	cfg, err := config.New()
 	if err != nil {
 		return fmt.Errorf("設定の初期化に失敗しました: %w", err)
 	}
-	
+
 	if !force {
 		fmt.Println("以下の設定がすべて削除されます:")
 		fmt.Println("  - すべてのプロファイル")
 		fmt.Println("  - すべてのサーバーテンプレート")
 		fmt.Println()
-		
+
 		if !interaction.Confirm("本当にすべての設定をリセットしますか？") {
 			fmt.Println("リセットをキャンセルしました")
 			return nil
@@ -108,7 +107,7 @@ func resetProfiles(force bool) error {
 	if err != nil {
 		return fmt.Errorf("設定の初期化に失敗しました: %w", err)
 	}
-	
+
 	return resetProfilesWithConfig(cfg, force)
 }
 
@@ -117,7 +116,7 @@ func resetServers(force bool) error {
 	if err != nil {
 		return fmt.Errorf("設定の初期化に失敗しました: %w", err)
 	}
-	
+
 	return resetServersWithConfig(cfg, force)
 }
 

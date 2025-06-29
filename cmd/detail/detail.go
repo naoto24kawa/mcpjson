@@ -43,4 +43,3 @@ func showProfileDetail(profileName string) error {
 	fmt.Println(string(jsonData))
 	return nil
 }
-
