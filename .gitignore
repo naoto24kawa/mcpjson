@@ -45,3 +45,6 @@ coverage.html
 # MCP configuration files generated during testing
 *.mcp.json
 .mcp.json
+
+# Homebrew tap repository (separate repo)
+homebrew-mcpconfig/
