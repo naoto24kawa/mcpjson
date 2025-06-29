@@ -24,7 +24,7 @@ func Execute(cfg *config.Config, args []string) {
 	for i, arg := range cmdArgs {
 		if arg == "--force" || arg == "-f" {
 			force = true
-			cmdArgs = append(cmdArgs[:i], cmdArgs[i+1:]...)
+			_ = append(cmdArgs[:i], cmdArgs[i+1:]...)
 			break
 		}
 	}

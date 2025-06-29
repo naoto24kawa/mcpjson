@@ -404,7 +404,7 @@ func TestTemplateUpdater_createNewTemplate(t *testing.T) {
 		t.Errorf("createNewTemplate() failed: %v", err)
 	}
 	if template == nil {
-		t.Error("createNewTemplate() returned nil template")
+		t.Fatal("createNewTemplate() returned nil template")
 	}
 	if template.Name != updaterTestTemplateName {
 		t.Errorf("Template name mismatch: got %s, want %s", template.Name, updaterTestTemplateName)

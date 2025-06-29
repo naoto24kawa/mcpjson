@@ -173,7 +173,7 @@ func TestTemplateManager_Load_Success(t *testing.T) {
 		t.Errorf("Load() failed: %v", err)
 	}
 	if template == nil {
-		t.Error("Load() returned nil template")
+		t.Fatal("Load() returned nil template")
 	}
 	if template.Name != testTemplateName {
 		t.Errorf("Template name mismatch: got %s, want %s", template.Name, testTemplateName)

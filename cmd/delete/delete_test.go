@@ -47,7 +47,7 @@ func TestExecute(t *testing.T) {
 			args: []string{config.DefaultProfileName, "--force"},
 			setup: func(cfg *config.Config) {
 				profileManager := profile.NewManager(cfg.ProfilesDir)
-				profileManager.Create(config.DefaultProfileName, "")
+				_ = profileManager.Create(config.DefaultProfileName, "")
 			},
 		},
 		{
@@ -55,7 +55,7 @@ func TestExecute(t *testing.T) {
 			args: []string{config.DefaultProfileName, "-f"},
 			setup: func(cfg *config.Config) {
 				profileManager := profile.NewManager(cfg.ProfilesDir)
-				profileManager.Create(config.DefaultProfileName, "")
+				_ = profileManager.Create(config.DefaultProfileName, "")
 			},
 		},
 		{

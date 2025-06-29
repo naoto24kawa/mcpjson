@@ -63,7 +63,7 @@ func TestExecute(t *testing.T) {
 			args: []string{"new-name3"},
 			setup: func(cfg *config.Config) {
 				profileManager := profile.NewManager(cfg.ProfilesDir)
-				profileManager.Create(config.DefaultProfileName, "test description")
+				_ = profileManager.Create(config.DefaultProfileName, "test description")
 			},
 		},
 	}

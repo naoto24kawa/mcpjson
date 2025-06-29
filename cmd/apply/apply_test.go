@@ -31,8 +31,8 @@ func setupTestEnvironment(t *testing.T) (string, func()) {
 		t.Fatalf("設定の作成に失敗: %v", err)
 	}
 
-	os.MkdirAll(cfg.ProfilesDir, 0755)
-	os.MkdirAll(cfg.ServersDir, 0755)
+	_ = os.MkdirAll(cfg.ProfilesDir, 0755)
+	_ = os.MkdirAll(cfg.ServersDir, 0755)
 
 	return tempDir, cleanup
 }
