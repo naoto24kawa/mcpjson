@@ -54,7 +54,7 @@ func TestExecute(t *testing.T) {
 			args: []string{"test-profile2", "--template", "test-template"},
 			setup: func(cfg *config.Config) {
 				serverManager := server.NewManager(cfg.ServersDir)
-				serverManager.SaveManual("test-template", "python", []string{"test.py"}, nil, false)
+				_ = serverManager.SaveManual("test-template", "python", []string{"test.py"}, nil, false)
 			},
 		},
 		{
@@ -62,7 +62,7 @@ func TestExecute(t *testing.T) {
 			args: []string{"test-profile3", "-t", "test-template"},
 			setup: func(cfg *config.Config) {
 				serverManager := server.NewManager(cfg.ServersDir)
-				serverManager.SaveManual("test-template", "python", []string{"test.py"}, nil, false)
+				_ = serverManager.SaveManual("test-template", "python", []string{"test.py"}, nil, false)
 			},
 		},
 	}

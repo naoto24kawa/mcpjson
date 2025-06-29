@@ -51,9 +51,9 @@ func TestExecute(t *testing.T) {
 				profileManager := profile.NewManager(cfg.ProfilesDir)
 				serverManager := server.NewManager(cfg.ServersDir)
 
-				serverManager.SaveManual("test-server", "python", []string{"test.py"}, nil, false)
-				profileManager.Create("default", "")
-				profileManager.AddServer("default", "test-server", "my-test-server", nil)
+				_ = serverManager.SaveManual("test-server", "python", []string{"test.py"}, nil, false)
+				_ = profileManager.Create("default", "")
+				_ = profileManager.AddServer("default", "test-server", "my-test-server", nil)
 			},
 			wantExit: false,
 		},

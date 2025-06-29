@@ -31,8 +31,8 @@ func setupTestEnvironment(t *testing.T) (*config.Config, func()) {
 		t.Fatalf("設定の作成に失敗: %v", err)
 	}
 
-	os.MkdirAll(cfg.ProfilesDir, 0755)
-	os.MkdirAll(cfg.ServersDir, 0755)
+	_ = os.MkdirAll(cfg.ProfilesDir, 0755)
+	_ = os.MkdirAll(cfg.ServersDir, 0755)
 
 	return cfg, cleanup
 }
@@ -48,7 +48,7 @@ func TestExecute(t *testing.T) {
 			args: []string{"profiles", "--force"},
 			setup: func(cfg *config.Config) {
 				profileManager := profile.NewManager(cfg.ProfilesDir)
-				profileManager.Create("test-profile", "test description")
+				_ = profileManager.Create("test-profile", "test description")
 			},
 		},
 		{
@@ -56,7 +56,7 @@ func TestExecute(t *testing.T) {
 			args: []string{"servers", "--force"},
 			setup: func(cfg *config.Config) {
 				serverManager := server.NewManager(cfg.ServersDir)
-				serverManager.SaveManual("test-server", "python", []string{"test.py"}, nil, false)
+				_ = serverManager.SaveManual("test-server", "python", []string{"test.py"}, nil, false)
 			},
 		},
 		{
@@ -64,9 +64,9 @@ func TestExecute(t *testing.T) {
 			args: []string{"all", "--force"},
 			setup: func(cfg *config.Config) {
 				profileManager := profile.NewManager(cfg.ProfilesDir)
-				profileManager.Create("test-profile", "test description")
+				_ = profileManager.Create("test-profile", "test description")
 				serverManager := server.NewManager(cfg.ServersDir)
-				serverManager.SaveManual("test-server", "python", []string{"test.py"}, nil, false)
+				_ = serverManager.SaveManual("test-server", "python", []string{"test.py"}, nil, false)
 			},
 		},
 	}
