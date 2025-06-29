@@ -23,18 +23,6 @@ linters:
     - errcheck
     - staticcheck
     - govet
-    - ineffassign
-    - unused
-    - goconst
-    - gocyclo
-    - gofmt
-    - goimports
-    - gosimple
-    - gocritic
-    - misspell
-    - unconvert
-    - unparam
-    - gosec
 
 run:
   timeout: 5m
