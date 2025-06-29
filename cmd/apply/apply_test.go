@@ -7,79 +7,74 @@ import (
 	"github.com/naoto24kawa/mcpconfig/internal/config"
 	"github.com/naoto24kawa/mcpconfig/internal/profile"
 	"github.com/naoto24kawa/mcpconfig/internal/server"
+	"github.com/naoto24kawa/mcpconfig/internal/testutil"
 )
 
-func setupTestEnvironment(t *testing.T) (string, func()) {
+func setupTestEnvironment(t *testing.T) (string, *config.Config, func()) {
 	t.Helper()
-
-	tempDir, err := os.MkdirTemp("", "apply_test")
-	if err != nil {
-		t.Fatalf("一時ディレクトリの作成に失敗: %v", err)
-	}
-
-	origXDGConfigHome := os.Getenv("XDG_CONFIG_HOME")
-	_ = os.Setenv("XDG_CONFIG_HOME", tempDir)
-
-	cleanup := func() {
-		_ = os.Setenv("XDG_CONFIG_HOME", origXDGConfigHome)
-		_ = os.RemoveAll(tempDir)
-	}
-
-	cfg, err := config.New()
-	if err != nil {
-		cleanup()
-		t.Fatalf("設定の作成に失敗: %v", err)
-	}
-
-	_ = os.MkdirAll(cfg.ProfilesDir, 0755)
-	_ = os.MkdirAll(cfg.ServersDir, 0755)
-
-	return tempDir, cleanup
+	return testutil.SetupIsolatedTestEnvironment(t)
 }
 
 func TestExecute(t *testing.T) {
 	tests := []struct {
-		name     string
-		args     []string
-		setup    func(cfg *config.Config)
-		wantExit bool
+		name       string
+		args       []string
+		setup      func(cfg *config.Config) string
+		wantExit   bool
+		useProfile bool
 	}{
 		{
-			name: "デフォルトプロファイルの適用",
-			args: []string{},
-			setup: func(cfg *config.Config) {
+			name:       "デフォルトプロファイルの適用",
+			args:       []string{},
+			useProfile: false,
+			setup: func(cfg *config.Config) string {
 				profileManager := profile.NewManager(cfg.ProfilesDir)
 				serverManager := server.NewManager(cfg.ServersDir)
 
-				_ = serverManager.SaveManual("test-server", "python", []string{"test.py"}, nil, false)
+				serverName := testutil.GenerateUniqueServerName("test-server")
+				instanceName := testutil.GenerateUniqueServerName("my-test-server")
+
+				_ = serverManager.SaveManual(serverName, "python", []string{"test.py"}, nil, false)
 				_ = profileManager.Create("default", "")
-				_ = profileManager.AddServer("default", "test-server", "my-test-server", nil)
+				_ = profileManager.AddServer("default", serverName, instanceName, nil)
+				return "default"
 			},
 			wantExit: false,
 		},
 		{
-			name: "特定プロファイルの適用",
-			args: []string{"test-profile"},
-			setup: func(cfg *config.Config) {
+			name:       "特定プロファイルの適用",
+			args:       []string{}, // Will be set dynamically in the test
+			useProfile: true,
+			setup: func(cfg *config.Config) string {
 				profileManager := profile.NewManager(cfg.ProfilesDir)
 				serverManager := server.NewManager(cfg.ServersDir)
 
-				_ = serverManager.SaveManual("test-server", "python", []string{"test.py"}, nil, false)
-				_ = profileManager.Create("test-profile", "")
-				_ = profileManager.AddServer("test-profile", "test-server", "my-test-server", nil)
+				profileName := testutil.GenerateUniqueProfileName("test-profile")
+				serverName := testutil.GenerateUniqueServerName("test-server")
+				instanceName := testutil.GenerateUniqueServerName("my-test-server")
+
+				_ = serverManager.SaveManual(serverName, "python", []string{"test.py"}, nil, false)
+				_ = profileManager.Create(profileName, "")
+				_ = profileManager.AddServer(profileName, serverName, instanceName, nil)
+				return profileName
 			},
 			wantExit: false,
 		},
 		{
-			name: "カスタムパスでの適用",
-			args: []string{"test-profile", "--to", "/tmp/custom-config.json"},
-			setup: func(cfg *config.Config) {
+			name:       "カスタムパスでの適用",
+			args:       []string{}, // Will be set dynamically in the test
+			useProfile: false,
+			setup: func(cfg *config.Config) string {
 				profileManager := profile.NewManager(cfg.ProfilesDir)
 				serverManager := server.NewManager(cfg.ServersDir)
 
-				_ = serverManager.SaveManual("test-server", "python", []string{"test.py"}, nil, false)
-				_ = profileManager.Create("test-profile", "")
-				_ = profileManager.AddServer("test-profile", "test-server", "my-test-server", nil)
+				serverName := testutil.GenerateUniqueServerName("test-server")
+				instanceName := testutil.GenerateUniqueServerName("my-test-server")
+
+				_ = serverManager.SaveManual(serverName, "python", []string{"test.py"}, nil, false)
+				_ = profileManager.Create("test-profile-custom", "")
+				_ = profileManager.AddServer("test-profile-custom", serverName, instanceName, nil)
+				return "test-profile-custom"
 			},
 			wantExit: false,
 		},
@@ -87,21 +82,26 @@ func TestExecute(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, cleanup := setupTestEnvironment(t)
+			_, cfg, cleanup := setupTestEnvironment(t)
 			defer cleanup()
 
-			cfg, err := config.New()
-			if err != nil {
-				t.Fatalf("設定の作成に失敗: %v", err)
+			// Setup test data
+			profileName := tt.setup(cfg)
+
+			// Handle dynamic args for different test cases
+			args := tt.args
+			if tt.useProfile {
+				args = []string{profileName}
+			} else if tt.name == "カスタムパスでの適用" {
+				customPath := testutil.CreateTempFile(t, cfg.ProfilesDir, "custom-config", ".json", []byte("{}"))
+				args = []string{profileName, "--to", customPath}
 			}
 
-			tt.setup(cfg)
-
-			Execute(tt.args)
+			Execute(args)
 
 			var outputPath string
-			if len(tt.args) >= 3 && (tt.args[len(tt.args)-2] == "--to" || tt.args[len(tt.args)-2] == "-t") {
-				outputPath = tt.args[len(tt.args)-1]
+			if len(args) >= 3 && (args[len(args)-2] == "--to" || args[len(args)-2] == "-t") {
+				outputPath = args[len(args)-1]
 			} else {
 				outputPath = config.GetDefaultMCPPath()
 			}

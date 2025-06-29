@@ -11,6 +11,7 @@ import (
 
 	"github.com/naoto24kawa/mcpconfig/internal/config"
 	"github.com/naoto24kawa/mcpconfig/internal/server"
+	"github.com/naoto24kawa/mcpconfig/internal/testutil"
 	"github.com/naoto24kawa/mcpconfig/internal/utils"
 )
 
@@ -143,33 +144,24 @@ func captureOutput(f func()) (stdout, stderr string) {
 
 func setupTestEnvironment(t *testing.T) (*config.Config, string, func()) {
 	t.Helper()
-
-	tempDir := t.TempDir()
-
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tempDir)
-
-	cfg, err := config.New()
-	if err != nil {
-		t.Fatalf("Failed to create test config: %v", err)
-	}
-
-	cleanup := func() {
-		os.Setenv("HOME", oldHome)
-	}
-
+	tempDir, cfg, cleanup := testutil.SetupIsolatedTestEnvironment(t)
 	return cfg, tempDir, cleanup
 }
 
-func createTestTemplate(t *testing.T, cfg *config.Config, templateName string) {
+func createTestTemplate(t *testing.T, cfg *config.Config, templateName string) string {
 	t.Helper()
 
+	// Generate unique template name
+	uniqueName := testutil.GenerateUniqueServerName(templateName)
+
 	serverManager := server.NewManager(cfg.ServersDir)
-	err := serverManager.SaveManual(templateName, "python", []string{"-m", "test"},
+	err := serverManager.SaveManual(uniqueName, "python", []string{"-m", "test"},
 		map[string]string{"TEST_ENV": "value"}, false)
 	if err != nil {
 		t.Fatalf("Failed to create test template: %v", err)
 	}
+	
+	return uniqueName
 }
 
 func TestExecute_NoArgs(t *testing.T) {
@@ -201,8 +193,7 @@ func TestExecute_ValidTemplate(t *testing.T) {
 	cfg, tempDir, cleanup := setupTestEnvironment(t)
 	defer cleanup()
 
-	templateName := "test-template"
-	createTestTemplate(t, cfg, templateName)
+	templateName := createTestTemplate(t, cfg, "test-template")
 
 	mcpConfigPath := filepath.Join(tempDir, "test-mcp.json")
 	executor := NewTestableExecutor(cfg)
@@ -287,8 +278,7 @@ func TestExecute_DefaultMCPPath(t *testing.T) {
 	cfg, tempDir, cleanup := setupTestEnvironment(t)
 	defer cleanup()
 
-	templateName := "default-path-template"
-	createTestTemplate(t, cfg, templateName)
+	templateName := createTestTemplate(t, cfg, "default-path-template")
 
 	// Change to temp directory so default ./.mcp.json is created there
 	oldWd, _ := os.Getwd()
@@ -325,9 +315,8 @@ func TestExecute_WithServerName(t *testing.T) {
 	cfg, tempDir, cleanup := setupTestEnvironment(t)
 	defer cleanup()
 
-	templateName := "test-template"
-	serverName := "custom-server-name"
-	createTestTemplate(t, cfg, templateName)
+	templateName := createTestTemplate(t, cfg, "test-template")
+	serverName := testutil.GenerateUniqueServerName("custom-server-name")
 
 	mcpConfigPath := filepath.Join(tempDir, "custom-mcp.json")
 	executor := NewTestableExecutor(cfg)
@@ -363,8 +352,7 @@ func TestExecute_WithEnvironmentOverrides(t *testing.T) {
 	cfg, tempDir, cleanup := setupTestEnvironment(t)
 	defer cleanup()
 
-	templateName := "env-template"
-	createTestTemplate(t, cfg, templateName)
+	templateName := createTestTemplate(t, cfg, "env-template")
 
 	mcpConfigPath := filepath.Join(tempDir, "env-mcp.json")
 	executor := NewTestableExecutor(cfg)
@@ -457,8 +445,7 @@ func TestExecute_InvalidEnvironmentFormat(t *testing.T) {
 	cfg, _, cleanup := setupTestEnvironment(t)
 	defer cleanup()
 
-	templateName := "test-template"
-	createTestTemplate(t, cfg, templateName)
+	templateName := createTestTemplate(t, cfg, "test-template")
 
 	executor := NewTestableExecutor(cfg)
 
@@ -510,11 +497,10 @@ func TestExecute_ShortFormOptions(t *testing.T) {
 	cfg, tempDir, cleanup := setupTestEnvironment(t)
 	defer cleanup()
 
-	templateName := "short-options-template"
-	createTestTemplate(t, cfg, templateName)
+	templateName := createTestTemplate(t, cfg, "short-options-template")
 
 	mcpConfigPath := filepath.Join(tempDir, "short-mcp.json")
-	serverName := "short-server"
+	serverName := testutil.GenerateUniqueServerName("short-server")
 	executor := NewTestableExecutor(cfg)
 
 	// Act
@@ -551,33 +537,24 @@ func TestExecute_ShortFormOptions(t *testing.T) {
 // Benchmark helper functions
 func setupBenchEnvironment(b *testing.B) (*config.Config, string, func()) {
 	b.Helper()
-
-	tempDir := b.TempDir()
-
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tempDir)
-
-	cfg, err := config.New()
-	if err != nil {
-		b.Fatalf("Failed to create bench config: %v", err)
-	}
-
-	cleanup := func() {
-		os.Setenv("HOME", oldHome)
-	}
-
+	tempDir, cfg, cleanup := testutil.SetupIsolatedTestEnvironment(&testing.T{})
 	return cfg, tempDir, cleanup
 }
 
-func createTestBenchTemplate(b *testing.B, cfg *config.Config, templateName string) {
+func createTestBenchTemplate(b *testing.B, cfg *config.Config, templateName string) string {
 	b.Helper()
 
+	// Generate unique template name
+	uniqueName := testutil.GenerateUniqueServerName(templateName)
+
 	serverManager := server.NewManager(cfg.ServersDir)
-	err := serverManager.SaveManual(templateName, "python", []string{"-m", "test"},
+	err := serverManager.SaveManual(uniqueName, "python", []string{"-m", "test"},
 		map[string]string{"TEST_ENV": "value"}, false)
 	if err != nil {
 		b.Fatalf("Failed to create bench template: %v", err)
 	}
+	
+	return uniqueName
 }
 
 // Benchmark tests
@@ -585,8 +562,7 @@ func BenchmarkExecute_ValidTemplate(b *testing.B) {
 	cfg, tempDir, cleanup := setupBenchEnvironment(b)
 	defer cleanup()
 
-	templateName := "bench-template"
-	createTestBenchTemplate(b, cfg, templateName)
+	templateName := createTestBenchTemplate(b, cfg, "bench-template")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

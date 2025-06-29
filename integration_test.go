@@ -6,46 +6,34 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/naoto24kawa/mcpconfig/internal/config"
 	"github.com/naoto24kawa/mcpconfig/internal/profile"
 	"github.com/naoto24kawa/mcpconfig/internal/server"
+	"github.com/naoto24kawa/mcpconfig/internal/testutil"
 )
 
 func TestIntegration_ProfileAndServerWorkflow(t *testing.T) {
-	// テスト用の一時ディレクトリを作成
-	tempDir := t.TempDir()
-	profilesDir := filepath.Join(tempDir, "profiles")
-	serversDir := filepath.Join(tempDir, "servers")
+	// テスト用の隔離された環境を作成
+	_, cfg, cleanup := testutil.SetupIsolatedTestEnvironment(t)
+	defer cleanup()
 
-	err := os.MkdirAll(profilesDir, 0755)
-	if err != nil {
-		t.Fatalf("プロファイルディレクトリ作成に失敗: %v", err)
-	}
-
-	err = os.MkdirAll(serversDir, 0755)
-	if err != nil {
-		t.Fatalf("サーバーディレクトリ作成に失敗: %v", err)
-	}
-
-	// 設定を作成（現在は直接使用しないが、将来の拡張のために残す）
-	_ = &config.Config{
-		ProfilesDir: profilesDir,
-		ServersDir:  serversDir,
-	}
+	// ユニークなテスト名を生成
+	testServerName := testutil.GenerateUniqueServerName("test-server")
+	testProfileName := testutil.GenerateUniqueProfileName("test-profile")
+	testInstanceName := testutil.GenerateUniqueServerName("my-server")
 
 	// サーバーマネージャーとプロファイルマネージャーを作成
-	serverManager := server.NewManager(serversDir)
-	profileManager := profile.NewManager(profilesDir)
+	serverManager := server.NewManager(cfg.ServersDir)
+	profileManager := profile.NewManager(cfg.ProfilesDir)
 
 	// 1. サーバーテンプレートを作成
 	t.Run("サーバーテンプレート作成", func(t *testing.T) {
-		err := serverManager.SaveManual("test-server", "python", []string{"-m", "test"}, map[string]string{"TEST_ENV": "value"}, false)
+		err := serverManager.SaveManual(testServerName, "python", []string{"-m", "test"}, map[string]string{"TEST_ENV": "value"}, false)
 		if err != nil {
 			t.Errorf("サーバーテンプレート作成に失敗: %v", err)
 		}
 
 		// テンプレートが存在することを確認
-		exists, err := serverManager.Exists("test-server")
+		exists, err := serverManager.Exists(testServerName)
 		if err != nil {
 			t.Errorf("存在確認に失敗: %v", err)
 		}
@@ -56,38 +44,38 @@ func TestIntegration_ProfileAndServerWorkflow(t *testing.T) {
 
 	// 2. プロファイルを作成
 	t.Run("プロファイル作成", func(t *testing.T) {
-		err := profileManager.Create("test-profile", "統合テスト用プロファイル")
+		err := profileManager.Create(testProfileName, "統合テスト用プロファイル")
 		if err != nil {
 			t.Errorf("プロファイル作成に失敗: %v", err)
 		}
 
 		// プロファイルが作成されていることを確認
-		profile, err := profileManager.Load("test-profile")
+		profile, err := profileManager.Load(testProfileName)
 		if err != nil {
 			t.Errorf("プロファイル読み込みに失敗: %v", err)
 		}
-		if profile.Name != "test-profile" {
-			t.Errorf("プロファイル名が不正: got %s, want test-profile", profile.Name)
+		if profile.Name != testProfileName {
+			t.Errorf("プロファイル名が不正: got %s, want %s", profile.Name, testProfileName)
 		}
 	})
 
 	// 3. プロファイルにサーバーを追加
 	t.Run("プロファイルにサーバー追加", func(t *testing.T) {
-		err := profileManager.AddServer("test-profile", "test-server", "my-server", map[string]string{"OVERRIDE_ENV": "override_value"})
+		err := profileManager.AddServer(testProfileName, testServerName, testInstanceName, map[string]string{"OVERRIDE_ENV": "override_value"})
 		if err != nil {
 			t.Errorf("サーバー追加に失敗: %v", err)
 		}
 
 		// サーバーが追加されていることを確認
-		profile, err := profileManager.Load("test-profile")
+		profile, err := profileManager.Load(testProfileName)
 		if err != nil {
 			t.Errorf("プロファイル読み込みに失敗: %v", err)
 		}
 		if len(profile.Servers) != 1 {
 			t.Errorf("サーバー数が不正: got %d, want 1", len(profile.Servers))
 		}
-		if profile.Servers[0].Name != "my-server" {
-			t.Errorf("サーバー名が不正: got %s, want my-server", profile.Servers[0].Name)
+		if profile.Servers[0].Name != testInstanceName {
+			t.Errorf("サーバー名が不正: got %s, want %s", profile.Servers[0].Name, testInstanceName)
 		}
 	})
 
@@ -109,7 +97,7 @@ func TestIntegration_ProfileAndServerWorkflow(t *testing.T) {
 			},
 		}
 
-		mcpPath := filepath.Join(tempDir, "test-mcp-config.json")
+		mcpPath := filepath.Join(cfg.ProfilesDir, "test-mcp-config.json")
 		file, err := os.Create(mcpPath)
 		if err != nil {
 			t.Fatalf("MCP設定ファイル作成に失敗: %v", err)
@@ -140,9 +128,9 @@ func TestIntegration_ProfileAndServerWorkflow(t *testing.T) {
 
 	// 5. プロファイルの適用テスト
 	t.Run("プロファイル適用", func(t *testing.T) {
-		outputPath := filepath.Join(tempDir, "output-mcp-config.json")
+		outputPath := filepath.Join(cfg.ProfilesDir, "output-mcp-config.json")
 
-		err := profileManager.Apply("test-profile", outputPath, serverManager)
+		err := profileManager.Apply(testProfileName, outputPath, serverManager)
 		if err != nil {
 			t.Errorf("プロファイル適用に失敗: %v", err)
 		}
@@ -169,9 +157,9 @@ func TestIntegration_ProfileAndServerWorkflow(t *testing.T) {
 			t.Errorf("出力サーバー数が不正: got %d, want 1", len(outputConfig.McpServers))
 		}
 
-		server, exists := outputConfig.McpServers["my-server"]
+		server, exists := outputConfig.McpServers[testInstanceName]
 		if !exists {
-			t.Errorf("サーバー 'my-server' が出力に含まれていません")
+			t.Errorf("サーバー '%s' が出力に含まれていません", testInstanceName)
 		}
 
 		if server.Command != "python" {
@@ -187,13 +175,13 @@ func TestIntegration_ProfileAndServerWorkflow(t *testing.T) {
 	// 6. サーバーの削除とプロファイルからの削除
 	t.Run("サーバー削除", func(t *testing.T) {
 		// プロファイルからサーバーを削除
-		err := profileManager.RemoveServer("test-profile", "my-server")
+		err := profileManager.RemoveServer(testProfileName, testInstanceName)
 		if err != nil {
 			t.Errorf("プロファイルからのサーバー削除に失敗: %v", err)
 		}
 
 		// サーバーが削除されていることを確認
-		profile, err := profileManager.Load("test-profile")
+		profile, err := profileManager.Load(testProfileName)
 		if err != nil {
 			t.Errorf("プロファイル読み込みに失敗: %v", err)
 		}
@@ -202,13 +190,13 @@ func TestIntegration_ProfileAndServerWorkflow(t *testing.T) {
 		}
 
 		// サーバーテンプレートを削除
-		err = serverManager.Delete("test-server", true, nil)
+		err = serverManager.Delete(testServerName, true, nil)
 		if err != nil {
 			t.Errorf("サーバーテンプレート削除に失敗: %v", err)
 		}
 
 		// サーバーテンプレートが削除されていることを確認
-		exists, err := serverManager.Exists("test-server")
+		exists, err := serverManager.Exists(testServerName)
 		if err != nil {
 			t.Errorf("存在確認に失敗: %v", err)
 		}
@@ -219,13 +207,13 @@ func TestIntegration_ProfileAndServerWorkflow(t *testing.T) {
 
 	// 7. プロファイルの削除
 	t.Run("プロファイル削除", func(t *testing.T) {
-		err := profileManager.Delete("test-profile", true)
+		err := profileManager.Delete(testProfileName, true)
 		if err != nil {
 			t.Errorf("プロファイル削除に失敗: %v", err)
 		}
 
 		// プロファイルが削除されていることを確認
-		_, err = profileManager.Load("test-profile")
+		_, err = profileManager.Load(testProfileName)
 		if err == nil {
 			t.Errorf("プロファイルが削除されていません")
 		}

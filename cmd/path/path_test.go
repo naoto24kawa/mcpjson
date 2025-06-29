@@ -9,37 +9,30 @@ import (
 
 	"github.com/naoto24kawa/mcpconfig/internal/config"
 	"github.com/naoto24kawa/mcpconfig/internal/profile"
+	"github.com/naoto24kawa/mcpconfig/internal/testutil"
 )
 
 func setupTestEnvironment(t *testing.T) (string, *config.Config, func()) {
 	t.Helper()
-
-	tempDir := t.TempDir()
-
-	// Set up temporary home directory
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tempDir)
-
-	cfg, err := config.New()
-	if err != nil {
-		t.Fatalf("Failed to create test config: %v", err)
-	}
-
-	cleanup := func() {
-		os.Setenv("HOME", oldHome)
-	}
-
-	return tempDir, cfg, cleanup
+	return testutil.SetupIsolatedTestEnvironment(t)
 }
 
-func createTestProfile(t *testing.T, cfg *config.Config, profileName string) {
+func createTestProfile(t *testing.T, cfg *config.Config, profileName string) string {
 	t.Helper()
 
+	// Generate unique profile name if needed
+	uniqueName := profileName
+	if profileName != config.DefaultProfileName {
+		uniqueName = testutil.GenerateUniqueProfileName(profileName)
+	}
+
 	profileManager := profile.NewManager(cfg.ProfilesDir)
-	err := profileManager.Create(profileName, "Test profile for path testing")
+	err := profileManager.Create(uniqueName, "Test profile for path testing")
 	if err != nil {
 		t.Fatalf("Failed to create test profile: %v", err)
 	}
+	
+	return uniqueName
 }
 
 func TestPathCmd_DefaultProfile(t *testing.T) {
@@ -47,7 +40,7 @@ func TestPathCmd_DefaultProfile(t *testing.T) {
 	_, cfg, cleanup := setupTestEnvironment(t)
 	defer cleanup()
 
-	createTestProfile(t, cfg, config.DefaultProfileName)
+	_ = createTestProfile(t, cfg, config.DefaultProfileName)
 
 	// Act
 	var output bytes.Buffer
@@ -110,8 +103,11 @@ func TestPathCmd_SpecificProfile(t *testing.T) {
 			_, cfg, cleanup := setupTestEnvironment(t)
 			defer cleanup()
 
+			var actualProfileName string
 			if tt.createFile {
-				createTestProfile(t, cfg, tt.profileName)
+				actualProfileName = createTestProfile(t, cfg, tt.profileName)
+			} else {
+				actualProfileName = tt.profileName
 			}
 
 			// Act
@@ -119,7 +115,7 @@ func TestPathCmd_SpecificProfile(t *testing.T) {
 			var errOutput bytes.Buffer
 			PathCmd.SetOut(&output)
 			PathCmd.SetErr(&errOutput)
-			PathCmd.SetArgs([]string{tt.profileName})
+			PathCmd.SetArgs([]string{actualProfileName})
 
 			err := PathCmd.Execute()
 
@@ -137,7 +133,7 @@ func TestPathCmd_SpecificProfile(t *testing.T) {
 				}
 
 				result := output.String()
-				expectedPath := filepath.Join(cfg.ProfilesDir, tt.profileName+config.FileExtension)
+				expectedPath := filepath.Join(cfg.ProfilesDir, actualProfileName+config.FileExtension)
 
 				if result != expectedPath {
 					t.Errorf("Expected path '%s', got '%s'", expectedPath, result)
@@ -191,12 +187,18 @@ func TestPathCmd_ArgumentValidation(t *testing.T) {
 			defer cleanup()
 
 			// Create default profile for cases that might succeed
+			var actualArgs []string
 			if !tt.expectError {
 				profileName := config.DefaultProfileName
 				if len(tt.args) > 0 && tt.args[0] != "" {
-					profileName = tt.args[0]
+					actualProfileName := createTestProfile(t, cfg, tt.args[0])
+					actualArgs = []string{actualProfileName}
+				} else {
+					_ = createTestProfile(t, cfg, profileName)
+					actualArgs = tt.args
 				}
-				createTestProfile(t, cfg, profileName)
+			} else {
+				actualArgs = tt.args
 			}
 
 			// Act
@@ -204,7 +206,7 @@ func TestPathCmd_ArgumentValidation(t *testing.T) {
 			var errOutput bytes.Buffer
 			PathCmd.SetOut(&output)
 			PathCmd.SetErr(&errOutput)
-			PathCmd.SetArgs(tt.args)
+			PathCmd.SetArgs(actualArgs)
 
 			err := PathCmd.Execute()
 
@@ -230,8 +232,7 @@ func TestPathCmd_OutputFormat(t *testing.T) {
 	_, cfg, cleanup := setupTestEnvironment(t)
 	defer cleanup()
 
-	profileName := "format-test-profile"
-	createTestProfile(t, cfg, profileName)
+	profileName := createTestProfile(t, cfg, "format-test-profile")
 
 	// Act
 	var output bytes.Buffer
@@ -279,10 +280,10 @@ func TestPathCmd_ConfigError(t *testing.T) {
 	// Assert
 	if err == nil {
 		t.Error("Expected error due to invalid config, but got none")
-	}
-
-	if !strings.Contains(err.Error(), "設定の読み込みに失敗しました") {
-		t.Errorf("Expected config error message, got: %s", err.Error())
+	} else {
+		if !strings.Contains(err.Error(), "設定の読み込みに失敗しました") {
+			t.Errorf("Expected config error message, got: %s", err.Error())
+		}
 	}
 }
 
@@ -326,14 +327,17 @@ func TestPathCmd_ValidationEdgeCases(t *testing.T) {
 			defer cleanup()
 
 			// Don't create profile for invalid names
+			var actualProfileName string
 			if !tt.expectError {
-				createTestProfile(t, cfg, tt.profileName)
+				actualProfileName = createTestProfile(t, cfg, tt.profileName)
+			} else {
+				actualProfileName = tt.profileName
 			}
 
 			// Act
 			var output bytes.Buffer
 			PathCmd.SetOut(&output)
-			PathCmd.SetArgs([]string{tt.profileName})
+			PathCmd.SetArgs([]string{actualProfileName})
 
 			err := PathCmd.Execute()
 
@@ -358,13 +362,14 @@ func TestPathCmd_Integration(t *testing.T) {
 	defer cleanup()
 
 	// Create multiple profiles
-	profiles := []string{"profile1", "profile2", "profile3"}
-	for _, profileName := range profiles {
-		createTestProfile(t, cfg, profileName)
+	profileBasenames := []string{"profile1", "profile2", "profile3"}
+	actualProfiles := make([]string, len(profileBasenames))
+	for i, profileName := range profileBasenames {
+		actualProfiles[i] = createTestProfile(t, cfg, profileName)
 	}
 
 	// Act & Assert - Test each profile
-	for _, profileName := range profiles {
+	for _, profileName := range actualProfiles {
 		t.Run("profile_"+profileName, func(t *testing.T) {
 			var output bytes.Buffer
 			PathCmd.SetOut(&output)
