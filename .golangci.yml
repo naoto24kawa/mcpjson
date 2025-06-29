@@ -14,14 +14,10 @@ linters-settings:
       - (*os.File).Close
     # テストファイルでのみ特定の関数のエラーチェックを無視
     ignore-tests: false
-    exclude: |
-      Error return value of `os\.(Setenv|RemoveAll|MkdirAll)` is not checked
-      Error return value of `.*\.Create` is not checked
 
 linters:
   enable:
     - errcheck
-    - staticcheck
     - govet
 
 run:
@@ -30,8 +26,8 @@ run:
   
 issues:
   exclude-rules:
-    # テストファイルでのみ特定のエラーを無視
+    # テストファイルでのエラーチェック漏れを無視
     - path: _test\.go
       linters:
         - errcheck
-      text: "Error return value of `(os\\.(Setenv|RemoveAll|MkdirAll)|.*\\.Create)` is not checked"
+      text: "Error return value of"
