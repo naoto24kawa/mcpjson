@@ -18,11 +18,11 @@ func setupTestEnvironment(t *testing.T) (string, func()) {
 	}
 
 	origXDGConfigHome := os.Getenv("XDG_CONFIG_HOME")
-	os.Setenv("XDG_CONFIG_HOME", tempDir)
+	_ = os.Setenv("XDG_CONFIG_HOME", tempDir)
 
 	cleanup := func() {
-		os.Setenv("XDG_CONFIG_HOME", origXDGConfigHome)
-		os.RemoveAll(tempDir)
+		_ = os.Setenv("XDG_CONFIG_HOME", origXDGConfigHome)
+		_ = os.RemoveAll(tempDir)
 	}
 
 	cfg, err := config.New()

@@ -1,0 +1,49 @@
+linters-settings:
+  errcheck:
+    # 以下の関数のエラーチェック漏れを無視
+    exclude-functions:
+      - fmt.Print
+      - fmt.Printf
+      - fmt.Println
+      - fmt.Fprint
+      - fmt.Fprintf
+      - fmt.Fprintln
+      - fmt.Sprint
+      - fmt.Sprintf
+      - fmt.Sprintln
+      - (*os.File).Close
+    # テストファイルでのみ特定の関数のエラーチェックを無視
+    ignore-tests: false
+    exclude: |
+      Error return value of `os\.(Setenv|RemoveAll|MkdirAll)` is not checked
+      Error return value of `.*\.Create` is not checked
+
+linters:
+  enable:
+    - errcheck
+    - staticcheck
+    - govet
+    - ineffassign
+    - unused
+    - goconst
+    - gocyclo
+    - gofmt
+    - goimports
+    - gosimple
+    - gocritic
+    - misspell
+    - unconvert
+    - unparam
+    - gosec
+
+run:
+  timeout: 5m
+  tests: true
+  
+issues:
+  exclude-rules:
+    # テストファイルでのみ特定のエラーを無視
+    - path: _test\.go
+      linters:
+        - errcheck
+      text: "Error return value of `(os\\.(Setenv|RemoveAll|MkdirAll)|.*\\.Create)` is not checked"
