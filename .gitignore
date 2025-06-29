@@ -4,6 +4,7 @@ CLAUDE.md
 .claude
 .vscode
 .tool-versions
+**/coverage*
 
 # Binaries for programs and plugins
 *.exe
