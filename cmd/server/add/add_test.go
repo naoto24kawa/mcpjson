@@ -117,13 +117,13 @@ func captureOutput(f func()) (stdout, stderr string) {
 
 	go func() {
 		var buf bytes.Buffer
-		io.Copy(&buf, stdoutR)
+		_, _ = io.Copy(&buf, stdoutR)
 		stdoutCh <- buf.String()
 	}()
 
 	go func() {
 		var buf bytes.Buffer
-		io.Copy(&buf, stderrR)
+		_, _ = io.Copy(&buf, stderrR)
 		stderrCh <- buf.String()
 	}()
 
@@ -292,8 +292,14 @@ func TestExecute_DefaultMCPPath(t *testing.T) {
 
 	// Change to temp directory so default ./.mcp.json is created there
 	oldWd, _ := os.Getwd()
-	os.Chdir(tempDir)
-	defer os.Chdir(oldWd)
+	if err := os.Chdir(tempDir); err != nil {
+		t.Fatalf("Failed to change directory: %v", err)
+	}
+	defer func() {
+		if err := os.Chdir(oldWd); err != nil {
+			t.Errorf("Failed to restore directory: %v", err)
+		}
+	}()
 
 	executor := NewTestableExecutor(cfg)
 

@@ -41,8 +41,8 @@ func setupTestEnvironment(t *testing.T) (string, func()) {
 }
 
 func TestExecute(t *testing.T) {
-	rand.Seed(time.Now().UnixNano())
-	testID := rand.Intn(10000)
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	testID := r.Intn(10000)
 
 	tests := []struct {
 		name  string

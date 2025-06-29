@@ -70,13 +70,13 @@ func captureOutput(f func()) (stdout, stderr string) {
 
 	go func() {
 		var buf bytes.Buffer
-		io.Copy(&buf, stdoutR)
+		_, _ = io.Copy(&buf, stdoutR)
 		stdoutCh <- buf.String()
 	}()
 
 	go func() {
 		var buf bytes.Buffer
-		io.Copy(&buf, stderrR)
+		_, _ = io.Copy(&buf, stderrR)
 		stderrCh <- buf.String()
 	}()
 

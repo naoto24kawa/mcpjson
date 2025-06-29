@@ -395,7 +395,9 @@ func BenchmarkPathCmd_Execute(b *testing.B) {
 
 	cfg, _ := config.New()
 	profileManager := profile.NewManager(cfg.ProfilesDir)
-	profileManager.Create("bench-profile", "Benchmark profile")
+	if err := profileManager.Create("bench-profile", "Benchmark profile"); err != nil {
+		b.Fatalf("Failed to create benchmark profile: %v", err)
+	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -419,7 +421,9 @@ func BenchmarkPathCmd_DefaultProfile(b *testing.B) {
 
 	cfg, _ := config.New()
 	profileManager := profile.NewManager(cfg.ProfilesDir)
-	profileManager.Create(config.DefaultProfileName, "Default profile")
+	if err := profileManager.Create(config.DefaultProfileName, "Default profile"); err != nil {
+		b.Fatalf("Failed to create default profile: %v", err)
+	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

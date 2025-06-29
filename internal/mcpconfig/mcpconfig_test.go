@@ -274,7 +274,9 @@ func TestMCPConfigManager_BuildFromProfile(t *testing.T) {
 
 				// Create test template
 				template := createTestServerTemplate()
-				utils.SaveJSON(filepath.Join(tempDir, "test-template.jsonc"), template)
+				if err := utils.SaveJSON(filepath.Join(tempDir, "test-template.jsonc"), template); err != nil {
+					t.Fatalf("Failed to save test template: %v", err)
+				}
 
 				return manager
 			},
@@ -338,8 +340,12 @@ func TestMCPConfigManager_BuildFromProfile(t *testing.T) {
 					},
 				}
 
-				utils.SaveJSON(filepath.Join(tempDir, "template1.jsonc"), template1)
-				utils.SaveJSON(filepath.Join(tempDir, "template2.jsonc"), template2)
+				if err := utils.SaveJSON(filepath.Join(tempDir, "template1.jsonc"), template1); err != nil {
+					t.Fatalf("Failed to save template1: %v", err)
+				}
+				if err := utils.SaveJSON(filepath.Join(tempDir, "template2.jsonc"), template2); err != nil {
+					t.Fatalf("Failed to save template2: %v", err)
+				}
 
 				return manager
 			},
@@ -546,7 +552,9 @@ func BenchmarkMCPConfigManager_BuildFromProfile(b *testing.B) {
 
 	// Setup test template
 	template := createTestServerTemplate()
-	utils.SaveJSON(filepath.Join(tempDir, "test-template.jsonc"), template)
+	if err := utils.SaveJSON(filepath.Join(tempDir, "test-template.jsonc"), template); err != nil {
+		b.Fatalf("Failed to save test template: %v", err)
+	}
 
 	profile := createTestProfile()
 
