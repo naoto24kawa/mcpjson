@@ -27,7 +27,20 @@ MCPサーバー設定をテンプレートとして再利用
 
 ## インストール
 
-### インストールスクリプト（推奨）
+### Homebrew（推奨）
+
+macOSユーザーの場合、Homebrewを使用したインストールが最も簡単です：
+
+```bash
+# tap を追加してインストール
+brew tap naoto24kawa/mcpconfig
+brew install mcpconfig
+
+# または1行で
+brew install naoto24kawa/mcpconfig
+```
+
+### インストールスクリプト
 
 最も簡単な方法は、インストールスクリプトを使用することです：
 
