@@ -28,6 +28,9 @@ go.work
 # Binary
 /mcpconfig
 
+# Build artifacts
+dist/
+
 # IDE
 .idea/
 *.swp
