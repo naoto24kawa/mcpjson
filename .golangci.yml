@@ -12,8 +12,6 @@ linters-settings:
       - fmt.Sprintf
       - fmt.Sprintln
       - (*os.File).Close
-    # テストファイルでのみ特定の関数のエラーチェックを無視
-    ignore-tests: false
 
 linters:
   disable-all: true
