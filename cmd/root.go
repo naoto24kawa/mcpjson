@@ -21,7 +21,7 @@ import (
 	"github.com/naoto24kawa/mcpjson/internal/utils"
 )
 
-var Version = "dev"
+var Version = "v0.2.5"
 
 type CommandRouter struct{}
 
