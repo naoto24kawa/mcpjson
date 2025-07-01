@@ -324,6 +324,133 @@ func (m *Manager) Rename(oldName, newName string, force bool) error {
 	return nil
 }
 
+// Copy creates a duplicate of an existing profile with a new name.
+// The original profile remains unchanged. All server configurations
+// from the source profile are copied to the destination profile.
+func (m *Manager) Copy(sourceName, destName string, force bool) error {
+	// Validate source profile exists
+	sourcePath := m.getProfilePath(sourceName)
+	if _, err := os.Stat(sourcePath); os.IsNotExist(err) {
+		return fmt.Errorf("プロファイル '%s' が見つかりません", sourceName)
+	}
+
+	// Check destination profile doesn't exist (unless force is true)
+	destPath := m.getProfilePath(destName)
+	if _, err := os.Stat(destPath); err == nil && !force {
+		return fmt.Errorf("プロファイル '%s' は既に存在します。別の名前を指定するか、--force オプションで上書きしてください", destName)
+	}
+
+	// Load source profile
+	profile, err := m.Load(sourceName)
+	if err != nil {
+		return err
+	}
+
+	// Create new profile with updated metadata
+	profile.Name = destName
+	profile.CreatedAt = time.Now()
+	profile.UpdatedAt = time.Now()
+
+	// Save the copied profile
+	if err := m.saveProfile(profile); err != nil {
+		return err
+	}
+
+	fmt.Printf("プロファイル '%s' を '%s' にコピーしました\n", sourceName, destName)
+	return nil
+}
+
+// Merge combines multiple profiles into a single new profile.
+// Server configurations from all source profiles are merged,
+// with duplicate server names being skipped (first-wins policy).
+func (m *Manager) Merge(destName string, sourceNames []string, force bool) error {
+	// Validate destination profile doesn't exist
+	if err := m.validateDestinationProfile(destName, force); err != nil {
+		return err
+	}
+
+	// Create new merged profile
+	mergedProfile := m.createMergedProfile(destName, sourceNames)
+
+	// Collect servers from all source profiles
+	if err := m.collectServersFromProfiles(mergedProfile, sourceNames); err != nil {
+		return err
+	}
+
+	// Save the merged profile
+	if err := m.saveProfile(mergedProfile); err != nil {
+		return err
+	}
+
+	// Report merge results
+	m.reportMergeResults(destName, sourceNames, len(mergedProfile.Servers))
+	return nil
+}
+
+// validateDestinationProfile checks if destination profile can be created
+func (m *Manager) validateDestinationProfile(destName string, force bool) error {
+	destPath := m.getProfilePath(destName)
+	if _, err := os.Stat(destPath); err == nil && !force {
+		return fmt.Errorf("プロファイル '%s' は既に存在します。別の名前を指定するか、--force オプションで上書きしてください", destName)
+	}
+	return nil
+}
+
+// createMergedProfile creates a new profile structure for merging
+func (m *Manager) createMergedProfile(destName string, sourceNames []string) *Profile {
+	return &Profile{
+		Name:        destName,
+		Description: fmt.Sprintf("%d個のプロファイルを合成", len(sourceNames)),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		Servers:     []ServerRef{},
+	}
+}
+
+// collectServersFromProfiles gathers servers from all source profiles
+func (m *Manager) collectServersFromProfiles(mergedProfile *Profile, sourceNames []string) error {
+	mergedServerNames := make(map[string]bool)
+
+	for _, sourceName := range sourceNames {
+		if err := m.collectServersFromProfile(mergedProfile, sourceName, mergedServerNames); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// collectServersFromProfile collects servers from a single source profile
+func (m *Manager) collectServersFromProfile(mergedProfile *Profile, sourceName string, mergedServerNames map[string]bool) error {
+	sourceProfile, err := m.Load(sourceName)
+	if err != nil {
+		return fmt.Errorf("プロファイル '%s' の読み込みに失敗しました: %w", sourceName, err)
+	}
+
+	for _, server := range sourceProfile.Servers {
+		if m.isServerAlreadyMerged(server.Name, sourceName, mergedServerNames) {
+			continue
+		}
+		mergedServerNames[server.Name] = true
+		mergedProfile.Servers = append(mergedProfile.Servers, server)
+	}
+	return nil
+}
+
+// isServerAlreadyMerged checks if server is already included and reports duplicates
+func (m *Manager) isServerAlreadyMerged(serverName, sourceName string, mergedServerNames map[string]bool) bool {
+	if mergedServerNames[serverName] {
+		fmt.Printf("警告: サーバー '%s' は既に追加されているため、スキップします（プロファイル: %s）\n", serverName, sourceName)
+		return true
+	}
+	return false
+}
+
+// reportMergeResults outputs the merge operation results
+func (m *Manager) reportMergeResults(destName string, sourceNames []string, serverCount int) {
+	fmt.Printf("プロファイル '%s' を作成しました（%d個のサーバー）\n", destName, serverCount)
+	fmt.Printf("合成元: %v\n", sourceNames)
+}
+
 func (m *Manager) Load(name string) (*Profile, error) {
 	profilePath := m.getProfilePath(name)
 

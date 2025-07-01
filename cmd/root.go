@@ -5,10 +5,12 @@ import (
 	"os"
 
 	"github.com/naoto24kawa/mcpjson/cmd/apply"
+	"github.com/naoto24kawa/mcpjson/cmd/copy"
 	"github.com/naoto24kawa/mcpjson/cmd/create"
 	"github.com/naoto24kawa/mcpjson/cmd/delete"
 	"github.com/naoto24kawa/mcpjson/cmd/detail"
 	"github.com/naoto24kawa/mcpjson/cmd/list"
+	"github.com/naoto24kawa/mcpjson/cmd/merge"
 	"github.com/naoto24kawa/mcpjson/cmd/path"
 	"github.com/naoto24kawa/mcpjson/cmd/rename"
 	"github.com/naoto24kawa/mcpjson/cmd/reset"
@@ -55,6 +57,10 @@ func (r *CommandRouter) Route(cmd string, args []string) {
 		delete.Execute(args)
 	case "rename":
 		rename.Execute(args)
+	case "copy":
+		copy.Execute(args)
+	case "merge":
+		merge.Execute(args)
 	case "detail":
 		r.handleDetail(args)
 	case "server":
@@ -122,9 +128,10 @@ func printUsage() {
   list [--detail]                           プロファイル一覧を表示
   delete [プロファイル名]                    プロファイルを削除 (デフォルト: %s)
   rename [現在の名前] <新しい名前>           プロファイル名を変更 (デフォルト: %s)
+  copy [コピー元] <コピー先>                 プロファイルをコピー (デフォルト: %s)
+  merge <合成先> <ソース1> [ソース2]...      複数のプロファイルを合成
   path [プロファイル名]                      プロファイルファイルのパスを表示 (デフォルト: %s)
   detail <プロファイル名>                    プロファイルの詳細を表示
-  detail server <サーバー名>                サーバーテンプレートの詳細を表示
   server <サブコマンド>                      MCPサーバー管理
   server-path <テンプレート名>               サーバーテンプレートファイルのパスを表示
   reset <サブコマンド>                       開発用設定のリセット
@@ -136,6 +143,7 @@ func printUsage() {
   --version, -v   バージョンを表示
 
 詳細は 'mcpconfig help <コマンド>' で確認してください`,
+		config.DefaultProfileName,
 		config.DefaultProfileName,
 		config.DefaultProfileName,
 		config.DefaultProfileName,

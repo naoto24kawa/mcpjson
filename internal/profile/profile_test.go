@@ -889,3 +889,409 @@ func TestManager_Apply_ProfileNotFound(t *testing.T) {
 		t.Error("Manager.Apply() expected error for nonexistent profile, got nil")
 	}
 }
+
+func TestManager_Copy(t *testing.T) {
+	tests := []struct {
+		name          string
+		sourceName    string
+		destName      string
+		force         bool
+		setupSource   bool
+		setupDest     bool
+		expectError   bool
+		errorContains string
+	}{
+		{
+			name:        "正常なプロファイルコピー",
+			sourceName:  "source-profile",
+			destName:    "dest-profile",
+			force:       false,
+			setupSource: true,
+			setupDest:   false,
+			expectError: false,
+		},
+		{
+			name:          "存在しないソースプロファイル",
+			sourceName:    "nonexistent",
+			destName:      "dest-profile",
+			force:         false,
+			setupSource:   false,
+			setupDest:     false,
+			expectError:   true,
+			errorContains: "が見つかりません",
+		},
+		{
+			name:          "既存の宛先プロファイル（forceなし）",
+			sourceName:    "source-profile",
+			destName:      "existing-dest",
+			force:         false,
+			setupSource:   true,
+			setupDest:     true,
+			expectError:   true,
+			errorContains: "は既に存在します",
+		},
+		{
+			name:        "既存の宛先プロファイル（forceあり）",
+			sourceName:  "source-profile",
+			destName:    "existing-dest",
+			force:       true,
+			setupSource: true,
+			setupDest:   true,
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Arrange
+			tempDir := t.TempDir()
+			manager := NewManager(tempDir)
+
+			// Setup source profile if needed
+			if tt.setupSource {
+				sourceProfile := &Profile{
+					Name:        tt.sourceName,
+					Description: "Test source profile",
+					CreatedAt:   time.Now(),
+					UpdatedAt:   time.Now(),
+					Servers: []ServerRef{
+						{Name: "test-server", Template: "test-template"},
+					},
+				}
+				sourcePath := filepath.Join(tempDir, tt.sourceName+".jsonc")
+				if err := createTestProfile(t, sourcePath, sourceProfile); err != nil {
+					t.Fatalf("Failed to create source profile: %v", err)
+				}
+			}
+
+			// Setup destination profile if needed
+			if tt.setupDest {
+				destProfile := &Profile{
+					Name:        tt.destName,
+					Description: "Test dest profile",
+					CreatedAt:   time.Now(),
+					UpdatedAt:   time.Now(),
+					Servers:     []ServerRef{},
+				}
+				destPath := filepath.Join(tempDir, tt.destName+".jsonc")
+				if err := createTestProfile(t, destPath, destProfile); err != nil {
+					t.Fatalf("Failed to create dest profile: %v", err)
+				}
+			}
+
+			// Act
+			err := manager.Copy(tt.sourceName, tt.destName, tt.force)
+
+			// Assert
+			if tt.expectError {
+				if err == nil {
+					t.Error("Manager.Copy() expected error, got nil")
+					return
+				}
+				if tt.errorContains != "" && len(tt.errorContains) > 0 {
+					if !containsString(err.Error(), tt.errorContains) {
+						t.Errorf("Manager.Copy() error = %q, expected to contain %q", err.Error(), tt.errorContains)
+					}
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Manager.Copy() unexpected error = %v", err)
+					return
+				}
+
+				// Verify destination profile was created
+				destPath := filepath.Join(tempDir, tt.destName+".jsonc")
+				if _, err := os.Stat(destPath); os.IsNotExist(err) {
+					t.Error("Destination profile was not created")
+				}
+
+				// Verify source profile still exists
+				sourcePath := filepath.Join(tempDir, tt.sourceName+".jsonc")
+				if _, err := os.Stat(sourcePath); os.IsNotExist(err) {
+					t.Error("Source profile should still exist after copy")
+				}
+
+				// Verify content was copied correctly
+				destProfile, err := manager.Load(tt.destName)
+				if err != nil {
+					t.Fatalf("Failed to load copied profile: %v", err)
+				}
+
+				if destProfile.Name != tt.destName {
+					t.Errorf("Copied profile name = %q, expected %q", destProfile.Name, tt.destName)
+				}
+
+				// Verify timestamps were updated
+				if destProfile.CreatedAt.IsZero() {
+					t.Error("Copied profile CreatedAt should be set")
+				}
+				if destProfile.UpdatedAt.IsZero() {
+					t.Error("Copied profile UpdatedAt should be set")
+				}
+			}
+		})
+	}
+}
+
+func TestManager_Merge(t *testing.T) {
+	tests := []struct {
+		name          string
+		destName      string
+		sourceNames   []string
+		force         bool
+		setupSources  []bool
+		setupDest     bool
+		expectError   bool
+		errorContains string
+		expectedServers int
+	}{
+		{
+			name:            "2つのプロファイルのマージ",
+			destName:        "merged-profile",
+			sourceNames:     []string{"source1", "source2"},
+			force:           false,
+			setupSources:    []bool{true, true},
+			setupDest:       false,
+			expectError:     false,
+			expectedServers: 4, // source1-server1, source1-server2, source2-server1, source2-server2
+		},
+		{
+			name:            "単一プロファイルのマージ",
+			destName:        "merged-profile",
+			sourceNames:     []string{"source1"},
+			force:           false,
+			setupSources:    []bool{true},
+			setupDest:       false,
+			expectError:     false,
+			expectedServers: 2, // source1-server1, source1-server2
+		},
+		{
+			name:          "存在しないソースプロファイル",
+			destName:      "merged-profile",
+			sourceNames:   []string{"nonexistent"},
+			force:         false,
+			setupSources:  []bool{false},
+			setupDest:     false,
+			expectError:   true,
+			errorContains: "の読み込みに失敗しました",
+		},
+		{
+			name:          "既存の宛先プロファイル（forceなし）",
+			destName:      "existing-dest",
+			sourceNames:   []string{"source1"},
+			force:         false,
+			setupSources:  []bool{true},
+			setupDest:     true,
+			expectError:   true,
+			errorContains: "は既に存在します",
+		},
+		{
+			name:            "既存の宛先プロファイル（forceあり）",
+			destName:        "existing-dest",
+			sourceNames:     []string{"source1"},
+			force:           true,
+			setupSources:    []bool{true},
+			setupDest:       true,
+			expectError:     false,
+			expectedServers: 2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Arrange
+			tempDir := t.TempDir()
+			manager := NewManager(tempDir)
+
+			// Setup source profiles
+			for i, sourceName := range tt.sourceNames {
+				if i < len(tt.setupSources) && tt.setupSources[i] {
+					sourceProfile := &Profile{
+						Name:        sourceName,
+						Description: "Test source profile " + sourceName,
+						CreatedAt:   time.Now(),
+						UpdatedAt:   time.Now(),
+						Servers: []ServerRef{
+							{Name: sourceName + "-server1", Template: "template1"}, // unique server per source
+							{Name: sourceName + "-server2", Template: "template2"}, // unique server per source
+						},
+					}
+					sourcePath := filepath.Join(tempDir, sourceName+".jsonc")
+					if err := createTestProfile(t, sourcePath, sourceProfile); err != nil {
+						t.Fatalf("Failed to create source profile %s: %v", sourceName, err)
+					}
+				}
+			}
+
+			// Setup destination profile if needed
+			if tt.setupDest {
+				destProfile := &Profile{
+					Name:        tt.destName,
+					Description: "Test dest profile",
+					CreatedAt:   time.Now(),
+					UpdatedAt:   time.Now(),
+					Servers:     []ServerRef{},
+				}
+				destPath := filepath.Join(tempDir, tt.destName+".jsonc")
+				if err := createTestProfile(t, destPath, destProfile); err != nil {
+					t.Fatalf("Failed to create dest profile: %v", err)
+				}
+			}
+
+			// Act
+			err := manager.Merge(tt.destName, tt.sourceNames, tt.force)
+
+			// Assert
+			if tt.expectError {
+				if err == nil {
+					t.Error("Manager.Merge() expected error, got nil")
+					return
+				}
+				if tt.errorContains != "" && len(tt.errorContains) > 0 {
+					if !containsString(err.Error(), tt.errorContains) {
+						t.Errorf("Manager.Merge() error = %q, expected to contain %q", err.Error(), tt.errorContains)
+					}
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Manager.Merge() unexpected error = %v", err)
+					return
+				}
+
+				// Verify destination profile was created
+				destPath := filepath.Join(tempDir, tt.destName+".jsonc")
+				if _, err := os.Stat(destPath); os.IsNotExist(err) {
+					t.Error("Destination profile was not created")
+				}
+
+				// Verify merged profile content
+				mergedProfile, err := manager.Load(tt.destName)
+				if err != nil {
+					t.Fatalf("Failed to load merged profile: %v", err)
+				}
+
+				if mergedProfile.Name != tt.destName {
+					t.Errorf("Merged profile name = %q, expected %q", mergedProfile.Name, tt.destName)
+				}
+
+				if len(mergedProfile.Servers) != tt.expectedServers {
+					t.Errorf("Merged profile servers count = %d, expected %d", len(mergedProfile.Servers), tt.expectedServers)
+				}
+
+				// Verify timestamps were set
+				if mergedProfile.CreatedAt.IsZero() {
+					t.Error("Merged profile CreatedAt should be set")
+				}
+				if mergedProfile.UpdatedAt.IsZero() {
+					t.Error("Merged profile UpdatedAt should be set")
+				}
+			}
+		})
+	}
+}
+
+func TestManager_Merge_DuplicateServers(t *testing.T) {
+	// Arrange
+	tempDir := t.TempDir()
+	manager := NewManager(tempDir)
+
+	// Create profiles with overlapping server names
+	profile1 := &Profile{
+		Name:        "profile1",
+		Description: "Profile with common server",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		Servers: []ServerRef{
+			{Name: "common-server", Template: "template1"},
+			{Name: "unique-server1", Template: "template1"},
+		},
+	}
+	profile1Path := filepath.Join(tempDir, "profile1.jsonc")
+	if err := createTestProfile(t, profile1Path, profile1); err != nil {
+		t.Fatalf("Failed to create profile1: %v", err)
+	}
+
+	profile2 := &Profile{
+		Name:        "profile2",
+		Description: "Profile with same common server",
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		Servers: []ServerRef{
+			{Name: "common-server", Template: "template2"}, // Same name, different template
+			{Name: "unique-server2", Template: "template2"},
+		},
+	}
+	profile2Path := filepath.Join(tempDir, "profile2.jsonc")
+	if err := createTestProfile(t, profile2Path, profile2); err != nil {
+		t.Fatalf("Failed to create profile2: %v", err)
+	}
+
+	// Act
+	err := manager.Merge("merged", []string{"profile1", "profile2"}, false)
+
+	// Assert
+	if err != nil {
+		t.Errorf("Manager.Merge() unexpected error = %v", err)
+		return
+	}
+
+	mergedProfile, err := manager.Load("merged")
+	if err != nil {
+		t.Fatalf("Failed to load merged profile: %v", err)
+	}
+
+	// Should have 3 servers: common-server (from profile1), unique-server1, unique-server2
+	expectedServers := 3
+	if len(mergedProfile.Servers) != expectedServers {
+		t.Errorf("Merged profile servers count = %d, expected %d", len(mergedProfile.Servers), expectedServers)
+	}
+
+	// Verify first-wins policy for common-server
+	var commonServer *ServerRef
+	for _, server := range mergedProfile.Servers {
+		if server.Name == "common-server" {
+			commonServer = &server
+			break
+		}
+	}
+
+	if commonServer == nil {
+		t.Error("common-server not found in merged profile")
+	} else if commonServer.Template != "template1" {
+		t.Errorf("Expected common-server to have template1 (first-wins), got %s", commonServer.Template)
+	}
+}
+
+// Helper function to create a test profile file
+func createTestProfile(t *testing.T, path string, profile *Profile) error {
+	t.Helper()
+
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(profile)
+}
+
+// Helper function to check if a string contains a substring
+func containsString(s, substr string) bool {
+	return len(substr) == 0 || (len(s) >= len(substr) && findInString(s, substr))
+}
+
+func findInString(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}

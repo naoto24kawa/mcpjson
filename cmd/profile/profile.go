@@ -46,6 +46,16 @@ func Rename(cfg *config.Config, oldName, newName string, force bool) error {
 	return profileManager.Rename(oldName, newName, force)
 }
 
+func Copy(cfg *config.Config, sourceName, destName string, force bool) error {
+	profileManager := profile.NewManager(cfg.ProfilesDir)
+	return profileManager.Copy(sourceName, destName, force)
+}
+
+func Merge(cfg *config.Config, destName string, sourceNames []string, force bool) error {
+	profileManager := profile.NewManager(cfg.ProfilesDir)
+	return profileManager.Merge(destName, sourceNames, force)
+}
+
 func GetProfilePath(cfg *config.Config, profileName string) (string, error) {
 	profileManager := profile.NewManager(cfg.ProfilesDir)
 	return profileManager.GetProfilePath(profileName)

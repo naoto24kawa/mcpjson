@@ -19,13 +19,13 @@ func UniqueTestID() string {
 	// Create a random seed source
 	source := rnd.NewSource(time.Now().UnixNano())
 	r := rnd.New(source)
-	
+
 	// Generate random bytes
 	bytes := make([]byte, 4)
 	for i := range bytes {
 		bytes[i] = byte(r.Intn(256))
 	}
-	
+
 	return hex.EncodeToString(bytes)
 }
 
@@ -67,7 +67,7 @@ func SetupIsolatedTestEnvironment(t *testing.T) (tempDir string, cfg *config.Con
 		// Restore original environment
 		_ = os.Setenv("XDG_CONFIG_HOME", origXDGConfigHome)
 		_ = os.Setenv("HOME", origHome)
-		
+
 		// Remove temporary directory
 		_ = os.RemoveAll(tempDir)
 	}
@@ -91,7 +91,7 @@ func GenerateRandomID(length int) string {
 	if length <= 0 {
 		length = 8
 	}
-	
+
 	bytes := make([]byte, int(math.Ceil(float64(length)/2)))
 	if _, err := rand.Read(bytes); err != nil {
 		// Fallback to math/rand if crypto/rand fails
@@ -101,25 +101,25 @@ func GenerateRandomID(length int) string {
 			bytes[i] = byte(r.Intn(256))
 		}
 	}
-	
+
 	result := hex.EncodeToString(bytes)
 	if len(result) > length {
 		result = result[:length]
 	}
-	
+
 	return result
 }
 
 // CreateTempFile creates a temporary file with unique name
 func CreateTempFile(t *testing.T, dir, prefix, suffix string, content []byte) string {
 	t.Helper()
-	
+
 	filename := fmt.Sprintf("%s-%s%s", prefix, UniqueTestID(), suffix)
 	filepath := filepath.Join(dir, filename)
-	
+
 	if err := os.WriteFile(filepath, content, 0644); err != nil {
 		t.Fatalf("一時ファイルの作成に失敗: %v", err)
 	}
-	
+
 	return filepath
 }

@@ -31,7 +31,7 @@ func createTestProfile(t *testing.T, cfg *config.Config, profileName string) str
 	if err != nil {
 		t.Fatalf("Failed to create test profile: %v", err)
 	}
-	
+
 	return uniqueName
 }
 

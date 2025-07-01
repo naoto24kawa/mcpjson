@@ -160,7 +160,7 @@ func createTestTemplate(t *testing.T, cfg *config.Config, templateName string) s
 	if err != nil {
 		t.Fatalf("Failed to create test template: %v", err)
 	}
-	
+
 	return uniqueName
 }
 
@@ -553,7 +553,7 @@ func createTestBenchTemplate(b *testing.B, cfg *config.Config, templateName stri
 	if err != nil {
 		b.Fatalf("Failed to create bench template: %v", err)
 	}
-	
+
 	return uniqueName
 }
 
