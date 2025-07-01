@@ -36,7 +36,7 @@ macOSユーザーの場合、Homebrewを使用したインストールが最も�
 brew tap naoto24kawa/mcpjson
 brew install mcpjson
 
-# または1行で
+# または1行で（完全修飾名を推奨）
 brew install naoto24kawa/mcpjson/mcpjson
 ```
 
