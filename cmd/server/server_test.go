@@ -134,7 +134,7 @@ func TestExecute_NoArgs(t *testing.T) {
 	if executor.exitCode != 0 {
 		t.Errorf("Expected exit code 0, got %d", executor.exitCode)
 	}
-	if !strings.Contains(stdout, "mcpconfig server - MCPサーバー管理") {
+	if !strings.Contains(stdout, "mcpjson server - MCPサーバー管理") {
 		t.Error("Expected usage to be printed")
 	}
 }
@@ -174,11 +174,6 @@ func TestExecute_ValidSubcommands(t *testing.T) {
 			name:       "remove subcommand",
 			subcommand: "remove",
 			args:       []string{"remove", "test-server"},
-		},
-		{
-			name:       "show subcommand",
-			subcommand: "show",
-			args:       []string{"show", "--from", "test.json"},
 		},
 		{
 			name:       "detail subcommand",
@@ -253,7 +248,7 @@ func TestExecute_InvalidSubcommand(t *testing.T) {
 			if !strings.Contains(stderr, tt.expectedErr) {
 				t.Errorf("Expected stderr to contain '%s', got: %s", tt.expectedErr, stderr)
 			}
-			if !strings.Contains(stdout, "mcpconfig server - MCPサーバー管理") {
+			if !strings.Contains(stdout, "mcpjson server - MCPサーバー管理") {
 				t.Error("Expected usage to be printed after error")
 			}
 		})
@@ -268,26 +263,28 @@ func TestPrintUsage(t *testing.T) {
 
 	// Assert
 	expectedContains := []string{
-		"mcpconfig server - MCPサーバー管理",
+		"mcpjson server - MCPサーバー管理",
 		"使用方法:",
-		"mcpconfig server <サブコマンド>",
+		"mcpjson server <サブコマンド>",
 		"サブコマンド:",
 		"save",
 		"list",
 		"delete",
+		"copy",
 		"rename",
 		"add",
 		"remove",
-		"show",
 		"detail",
+		"path",
 		"設定ファイルからサーバー保存",
 		"サーバー一覧表示",
 		"サーバー削除",
+		"サーバーコピー",
 		"サーバー名変更",
 		"プロファイルにサーバー追加",
 		"プロファイルからサーバー削除",
-		"設定ファイルからサーバー情報表示",
 		"サーバーテンプレートの詳細を表示",
+		"サーバーテンプレートパスを表示",
 	}
 
 	for _, expected := range expectedContains {
@@ -303,7 +300,7 @@ func TestExecute_SubcommandRouting(t *testing.T) {
 
 	validSubcommands := []string{
 		"save", "list", "delete", "rename",
-		"add", "remove", "show", "detail",
+		"add", "remove", "detail",
 	}
 
 	for _, subCmd := range validSubcommands {

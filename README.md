@@ -92,7 +92,7 @@ sudo mv mcpjson /usr/local/bin/  # Linux/macOS
 mcpjson list
 
 # 現在のMCP設定ファイルの内容を確認
-mcpjson server show --from ~/.mcp.json
+mcpjson server list --detail --from ~/.mcp.json
 ```
 
 #### プロファイル基本操作
@@ -165,7 +165,7 @@ mcpjson server remove git --from ~/.mcp.json
 
 ```bash
 # 1. 現在の開発環境設定を確認
-mcpjson server show --from .mcp.json
+mcpjson server list --detail --from .mcp.json
 
 # 2. 開発用プロファイルを作成（バックアップ）
 mcpjson save dev-profile
@@ -238,7 +238,6 @@ mcpjson server save <サーバー名> --command <コマンド> [--args <引数>]
 | `server rename <現在名> <新名前>` | テンプレート名を変更 | `mcpjson server rename old new` |
 | `server add <テンプレート> --to <ファイル>` | MCPファイルにサーバー追加 | `mcpjson server add git-server --to ~/.mcp.json` |
 | `server remove <サーバー名> --from <ファイル>` | MCPファイルからサーバー削除 | `mcpjson server remove git --from ~/.mcp.json` |
-| `server show --from <ファイル>` | 設定ファイルのサーバー情報を表示 | `mcpjson server show --from ~/.mcp.json` |
 
 ### ユーティリティコマンド
 
