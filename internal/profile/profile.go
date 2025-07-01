@@ -35,8 +35,8 @@ type Profile struct {
 	Servers     []ServerRef `json:"servers"`
 }
 
-type ServerRef = mcpconfig.ServerRef
-type ServerOverrides = mcpconfig.ServerOverrides
+type ServerRef = mcpjson.ServerRef
+type ServerOverrides = mcpjson.ServerOverrides
 
 type Manager struct {
 	profilesDir string
@@ -114,7 +114,7 @@ func (m *Manager) validateProfileCreation(name string, force bool) error {
 }
 
 func (m *Manager) loadMCPConfig(mcpConfigPath string) (*server.MCPConfig, error) {
-	mcpManager := mcpconfig.NewMCPConfigManager()
+	mcpManager := mcpjson.NewMCPConfigManager()
 	return mcpManager.Load(mcpConfigPath)
 }
 
@@ -186,7 +186,7 @@ func (m *Manager) Apply(name string, targetPath string, serverManager *server.Ma
 		return err
 	}
 
-	mcpManager := mcpconfig.NewMCPConfigManager()
+	mcpManager := mcpjson.NewMCPConfigManager()
 	mcpConfig, err := mcpManager.BuildFromProfile((*mcpconfig.ProfileData)(profile), serverManager)
 	if err != nil {
 		return err
