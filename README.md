@@ -37,7 +37,7 @@ brew tap naoto24kawa/mcpjson
 brew install mcpjson
 
 # または1行で
-brew install naoto24kawa/mcpjson
+brew install naoto24kawa/mcpjson/mcpjson
 ```
 
 ### インストールスクリプト
