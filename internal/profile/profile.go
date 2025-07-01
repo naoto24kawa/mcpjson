@@ -187,7 +187,7 @@ func (m *Manager) Apply(name string, targetPath string, serverManager *server.Ma
 	}
 
 	mcpManager := mcpjson.NewMCPConfigManager()
-	mcpConfig, err := mcpManager.BuildFromProfile((*mcpconfig.ProfileData)(profile), serverManager)
+	mcpConfig, err := mcpManager.BuildFromProfile((*mcpjson.ProfileData)(profile), serverManager)
 	if err != nil {
 		return err
 	}

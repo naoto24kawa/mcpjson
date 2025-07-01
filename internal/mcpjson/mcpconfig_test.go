@@ -1,4 +1,4 @@
-package mcpconfig
+package mcpjson
 
 import (
 	"encoding/json"
