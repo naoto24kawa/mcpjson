@@ -32,13 +32,15 @@ MCPサーバー設定をテンプレートとして再利用
 macOSユーザーの場合、Homebrewを使用したインストールが最も簡単です：
 
 ```bash
-# tap を追加してインストール
+# 推奨: tap を追加してインストール
 brew tap naoto24kawa/mcpjson
 brew install mcpjson
 
-# または完全修飾名で1行インストール
+# 別の方法: 完全修飾名で1行インストール
 brew install naoto24kawa/mcpjson/mcpjson
 ```
+
+> **Note**: `brew tap` を使用する方法を推奨します。これにより、今後 `brew upgrade mcpjson` で簡単にアップデートできます。
 
 ### インストールスクリプト
 
