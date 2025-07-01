@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/naoto24kawa/mcpconfig/cmd"
+	"github.com/naoto24kawa/mcpjson/cmd"
 )
 
 func main() {

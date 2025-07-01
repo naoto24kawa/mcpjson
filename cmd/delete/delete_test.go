@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/naoto24kawa/mcpconfig/internal/config"
-	"github.com/naoto24kawa/mcpconfig/internal/profile"
+	"github.com/naoto24kawa/mcpjson/internal/config"
+	"github.com/naoto24kawa/mcpjson/internal/profile"
 )
 
 func setupTestEnvironment(t *testing.T) (string, func()) {

@@ -6,12 +6,12 @@ COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 BUILD_TIME := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # ビルド設定
-BINARY_NAME := mcpconfig
+BINARY_NAME := mcpjson
 MAIN_PACKAGE := .
 LDFLAGS := -s -w \
-	-X 'github.com/naoto24kawa/mcpconfig/cmd.Version=$(VERSION)' \
-	-X 'github.com/naoto24kawa/mcpconfig/cmd.Commit=$(COMMIT)' \
-	-X 'github.com/naoto24kawa/mcpconfig/cmd.BuildTime=$(BUILD_TIME)'
+	-X 'github.com/naoto24kawa/mcpjson/cmd.Version=$(VERSION)' \
+	-X 'github.com/naoto24kawa/mcpjson/cmd.Commit=$(COMMIT)' \
+	-X 'github.com/naoto24kawa/mcpjson/cmd.BuildTime=$(BUILD_TIME)'
 
 # Go設定
 GO := go

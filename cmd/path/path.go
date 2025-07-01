@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/naoto24kawa/mcpconfig/cmd/profile"
-	"github.com/naoto24kawa/mcpconfig/internal/config"
+	"github.com/naoto24kawa/mcpjson/cmd/profile"
+	"github.com/naoto24kawa/mcpjson/internal/config"
 )
 
 var PathCmd = &cobra.Command{

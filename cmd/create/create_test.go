@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/naoto24kawa/mcpconfig/internal/config"
-	"github.com/naoto24kawa/mcpconfig/internal/profile"
-	"github.com/naoto24kawa/mcpconfig/internal/server"
+	"github.com/naoto24kawa/mcpjson/internal/config"
+	"github.com/naoto24kawa/mcpjson/internal/profile"
+	"github.com/naoto24kawa/mcpjson/internal/server"
 )
 
 func setupTestEnvironment(t *testing.T) (string, func()) {

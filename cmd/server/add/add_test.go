@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/naoto24kawa/mcpconfig/internal/config"
-	"github.com/naoto24kawa/mcpconfig/internal/server"
-	"github.com/naoto24kawa/mcpconfig/internal/testutil"
-	"github.com/naoto24kawa/mcpconfig/internal/utils"
+	"github.com/naoto24kawa/mcpjson/internal/config"
+	"github.com/naoto24kawa/mcpjson/internal/server"
+	"github.com/naoto24kawa/mcpjson/internal/testutil"
+	"github.com/naoto24kawa/mcpjson/internal/utils"
 )
 
 // TestableExecutor wraps Execute for testing

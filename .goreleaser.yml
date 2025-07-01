@@ -20,8 +20,8 @@ builds:
       - goos: windows
         goarch: arm64
     ldflags:
-      - -s -w -X github.com/naoto24kawa/mcpconfig/cmd.Version={{.Version}}
-    binary: mcpconfig
+      - -s -w -X github.com/naoto24kawa/mcpjson/cmd.Version={{.Version}}
+    binary: mcpjson
 
 archives:
   - format: tar.gz
@@ -58,7 +58,7 @@ changelog:
 release:
   github:
     owner: naoto24kawa
-    name: mcpconfig
+    name: mcpjson
   name_template: "{{.ProjectName}}-v{{.Version}}"
   draft: false
   prerelease: auto

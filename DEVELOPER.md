@@ -1,6 +1,6 @@
-# mcpconfig 開発者ガイド
+# mcpjson 開発者ガイド
 
-mcpconfigの開発に参加していただき、ありがとうございます。このドキュメントでは、開発環境の構築から実際の開発手順まで、コントリビューターに必要な情報を提供します。
+mcpjsonの開発に参加していただき、ありがとうございます。このドキュメントでは、開発環境の構築から実際の開発手順まで、コントリビューターに必要な情報を提供します。
 
 ## 必要な環境
 
@@ -20,8 +20,8 @@ mcpconfigの開発に参加していただき、ありがとうございます�
 ### 1. リポジトリのクローン
 
 ```bash
-git clone https://github.com/naoto24kawa/mcpconfig.git
-cd mcpconfig
+git clone https://github.com/naoto24kawa/mcpjson.git
+cd mcpjson
 ```
 
 ### 2. 依存関係の確認
@@ -33,7 +33,7 @@ go mod tidy
 ### 3. ビルドの確認
 
 ```bash
-go build -o mcpconfig .
+go build -o mcpjson .
 ```
 
 ## 開発手順
@@ -42,10 +42,10 @@ go build -o mcpconfig .
 
 ```bash
 # ローカルビルド
-go build -o mcpconfig .
+go build -o mcpjson .
 
 # インストール
-sudo mv mcpconfig /usr/local/bin/  # Linux/macOS
+sudo mv mcpjson /usr/local/bin/  # Linux/macOS
 ```
 
 ### 開発時のビルド
@@ -58,7 +58,7 @@ make build
 make build-all
 
 # 開発時のクイックビルド
-go build -o bin/mcpconfig .
+go build -o bin/mcpjson .
 ```
 
 ### テスト実行
@@ -90,7 +90,7 @@ go test -run TestSpecificFunction ./internal/...
 ## プロジェクト構造
 
 ```
-mcpconfig/
+mcpjson/
 ├── cmd/                    # コマンドラインインターフェース
 │   └── root.go
 ├── internal/               # 内部パッケージ
@@ -160,9 +160,9 @@ GitHub Actionsが自動的に以下を実行します：
 make snapshot
 
 # 手動でのクロスコンパイル
-GOOS=linux GOARCH=amd64 go build -o dist/mcpconfig-linux-amd64 .
-GOOS=darwin GOARCH=amd64 go build -o dist/mcpconfig-darwin-amd64 .
-GOOS=windows GOARCH=amd64 go build -o dist/mcpconfig-windows-amd64.exe .
+GOOS=linux GOARCH=amd64 go build -o dist/mcpjson-linux-amd64 .
+GOOS=darwin GOARCH=amd64 go build -o dist/mcpjson-darwin-amd64 .
+GOOS=windows GOARCH=amd64 go build -o dist/mcpjson-windows-amd64.exe .
 ```
 
 ## コントリビューション方法
@@ -270,10 +270,10 @@ func debugLog(format string, args ...interface{}) {
 
 ```bash
 # デバッグモードで実行
-DEBUG=true ./mcpconfig list
+DEBUG=true ./mcpjson list
 
 # 詳細なGoの実行ログ
-GODEBUG=gctrace=1 ./mcpconfig list
+GODEBUG=gctrace=1 ./mcpjson list
 ```
 
 ## よくある質問
@@ -293,7 +293,7 @@ A: `go mod tidy` で依存関係を整理し、Go のバージョンが 1.21 以
 ## 関連リンク
 
 - [メインREADME](README.md) - ユーザー向けドキュメント
-- [GitHub Issues](https://github.com/naoto24kawa/mcpconfig/issues) - バグ報告・機能要求
+- [GitHub Issues](https://github.com/naoto24kawa/mcpjson/issues) - バグ報告・機能要求
 - [Go Documentation](https://golang.org/doc/) - Go言語の公式ドキュメント
 - [MCP仕様](https://spec.modelcontextprotocol.io/) - Model Context Protocol仕様
 

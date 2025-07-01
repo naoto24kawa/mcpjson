@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/naoto24kawa/mcpconfig/internal/config"
-	"github.com/naoto24kawa/mcpconfig/internal/profile"
-	"github.com/naoto24kawa/mcpconfig/internal/utils"
+	"github.com/naoto24kawa/mcpjson/internal/config"
+	"github.com/naoto24kawa/mcpjson/internal/profile"
+	"github.com/naoto24kawa/mcpjson/internal/utils"
 )
 
 func Execute(args []string) error {

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/naoto24kawa/mcpconfig/internal/server"
+	"github.com/naoto24kawa/mcpjson/internal/server"
 )
 
 const (

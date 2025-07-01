@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/naoto24kawa/mcpconfig/internal/config"
-	"github.com/naoto24kawa/mcpconfig/internal/interaction"
-	"github.com/naoto24kawa/mcpconfig/internal/utils"
+	"github.com/naoto24kawa/mcpjson/internal/config"
+	"github.com/naoto24kawa/mcpjson/internal/interaction"
+	"github.com/naoto24kawa/mcpjson/internal/utils"
 )
 
 // ProfileManager インターフェースはプロファイル管理機能を抽象化します

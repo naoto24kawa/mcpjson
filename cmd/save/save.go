@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/naoto24kawa/mcpconfig/cmd/profile"
-	"github.com/naoto24kawa/mcpconfig/internal/config"
-	"github.com/naoto24kawa/mcpconfig/internal/utils"
+	"github.com/naoto24kawa/mcpjson/cmd/profile"
+	"github.com/naoto24kawa/mcpjson/internal/config"
+	"github.com/naoto24kawa/mcpjson/internal/utils"
 )
 
 // findMCPConfigFile searches for MCP configuration file in default locations

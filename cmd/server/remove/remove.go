@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/naoto24kawa/mcpconfig/internal/config"
-	"github.com/naoto24kawa/mcpconfig/internal/server"
-	"github.com/naoto24kawa/mcpconfig/internal/utils"
+	"github.com/naoto24kawa/mcpjson/internal/config"
+	"github.com/naoto24kawa/mcpjson/internal/server"
+	"github.com/naoto24kawa/mcpjson/internal/utils"
 )
 
 func Execute(cfg *config.Config, args []string) {

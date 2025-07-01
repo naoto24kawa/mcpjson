@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/naoto24kawa/mcpconfig/internal/config"
+	"github.com/naoto24kawa/mcpjson/internal/config"
 )
 
 func TestCreate(t *testing.T) {

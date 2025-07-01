@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/naoto24kawa/mcpconfig/internal/config"
+	"github.com/naoto24kawa/mcpjson/internal/config"
 )
 
 // TestableCommandRouter extends CommandRouter for testing

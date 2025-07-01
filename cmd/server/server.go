@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/naoto24kawa/mcpconfig/cmd/server/add"
-	"github.com/naoto24kawa/mcpconfig/cmd/server/delete"
-	"github.com/naoto24kawa/mcpconfig/cmd/server/detail"
-	"github.com/naoto24kawa/mcpconfig/cmd/server/list"
-	"github.com/naoto24kawa/mcpconfig/cmd/server/remove"
-	"github.com/naoto24kawa/mcpconfig/cmd/server/rename"
-	"github.com/naoto24kawa/mcpconfig/cmd/server/save"
-	"github.com/naoto24kawa/mcpconfig/cmd/server/show"
-	"github.com/naoto24kawa/mcpconfig/internal/config"
-	"github.com/naoto24kawa/mcpconfig/internal/utils"
+	"github.com/naoto24kawa/mcpjson/cmd/server/add"
+	"github.com/naoto24kawa/mcpjson/cmd/server/delete"
+	"github.com/naoto24kawa/mcpjson/cmd/server/detail"
+	"github.com/naoto24kawa/mcpjson/cmd/server/list"
+	"github.com/naoto24kawa/mcpjson/cmd/server/remove"
+	"github.com/naoto24kawa/mcpjson/cmd/server/rename"
+	"github.com/naoto24kawa/mcpjson/cmd/server/save"
+	"github.com/naoto24kawa/mcpjson/cmd/server/show"
+	"github.com/naoto24kawa/mcpjson/internal/config"
+	"github.com/naoto24kawa/mcpjson/internal/utils"
 )
 
 func Execute(cfg *config.Config, args []string) {

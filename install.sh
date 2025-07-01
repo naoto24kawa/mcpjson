@@ -9,9 +9,9 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # 設定
-REPO="naoto24kawa/mcpconfig"
+REPO="naoto24kawa/mcpjson"
 INSTALL_DIR="/usr/local/bin"
-BINARY_NAME="mcpconfig"
+BINARY_NAME="mcpjson"
 
 # ヘルパー関数
 print_error() {
@@ -122,7 +122,7 @@ download_and_install() {
 
 # メイン処理
 main() {
-    print_info "mcpconfig インストーラー"
+    print_info "mcpjson インストーラー"
     print_info "========================"
     
     # OS/アーキテクチャの検出

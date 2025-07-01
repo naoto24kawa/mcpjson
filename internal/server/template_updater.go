@@ -3,7 +3,7 @@ package server
 import (
 	"fmt"
 
-	"github.com/naoto24kawa/mcpconfig/internal/interaction"
+	"github.com/naoto24kawa/mcpjson/internal/interaction"
 )
 
 // TemplateUpdater handles template update operations

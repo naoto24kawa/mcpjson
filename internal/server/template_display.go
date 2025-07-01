@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/naoto24kawa/mcpconfig/internal/config"
+	"github.com/naoto24kawa/mcpjson/internal/config"
 )
 
 // TemplateDisplay handles template listing and display operations

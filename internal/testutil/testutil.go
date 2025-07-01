@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/naoto24kawa/mcpconfig/internal/config"
+	"github.com/naoto24kawa/mcpjson/internal/config"
 )
 
 // UniqueTestID generates a unique identifier for tests

@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/naoto24kawa/mcpconfig/internal/profile"
-	"github.com/naoto24kawa/mcpconfig/internal/server"
-	"github.com/naoto24kawa/mcpconfig/internal/testutil"
+	"github.com/naoto24kawa/mcpjson/internal/profile"
+	"github.com/naoto24kawa/mcpjson/internal/server"
+	"github.com/naoto24kawa/mcpjson/internal/testutil"
 )
 
 func TestIntegration_ProfileAndServerWorkflow(t *testing.T) {

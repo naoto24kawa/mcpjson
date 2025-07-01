@@ -1,4 +1,4 @@
-module github.com/naoto24kawa/mcpconfig
+module github.com/naoto24kawa/mcpjson
 
 go 1.21
 

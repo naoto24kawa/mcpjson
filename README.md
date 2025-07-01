@@ -1,10 +1,10 @@
-# mcpconfig
+# mcpjson
 
 MCP（Model Context Protocol）設定ファイルを効率的に管理するCLIツール
 
 ## 概要
 
-mcpconfigは、MCPサーバー設定をプロファイルとして管理し、異なる環境や用途に応じて簡単に切り替えることができるツールです。プロファイル機能により、複数のMCPサーバー設定を1つのプロファイルとして管理し、環境に応じた設定切り替えを実現します。
+mcpjsonは、MCPサーバー設定をプロファイルとして管理し、異なる環境や用途に応じて簡単に切り替えることができるツールです。プロファイル機能により、複数のMCPサーバー設定を1つのプロファイルとして管理し、環境に応じた設定切り替えを実現します。
 
 ### 主な機能
 
@@ -33,11 +33,11 @@ macOSユーザーの場合、Homebrewを使用したインストールが最も�
 
 ```bash
 # tap を追加してインストール
-brew tap naoto24kawa/mcpconfig
-brew install mcpconfig
+brew tap naoto24kawa/mcpjson
+brew install mcpjson
 
 # または1行で
-brew install naoto24kawa/mcpconfig
+brew install naoto24kawa/mcpjson
 ```
 
 ### インストールスクリプト
@@ -45,21 +45,21 @@ brew install naoto24kawa/mcpconfig
 最も簡単な方法は、インストールスクリプトを使用することです：
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/naoto24kawa/mcpconfig/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/naoto24kawa/mcpjson/main/install.sh | bash
 ```
 
 ### バイナリダウンロード
 
-[リリースページ](https://github.com/naoto24kawa/mcpconfig/releases)から、お使いのOS/アーキテクチャに対応したバイナリをダウンロードしてください。
+[リリースページ](https://github.com/naoto24kawa/mcpjson/releases)から、お使いのOS/アーキテクチャに対応したバイナリをダウンロードしてください。
 
 ```bash
 # Linux/macOS
-curl -L https://github.com/naoto24kawa/mcpconfig/releases/latest/download/mcpconfig-linux-amd64 -o mcpconfig
-chmod +x mcpconfig
-sudo mv mcpconfig /usr/local/bin/
+curl -L https://github.com/naoto24kawa/mcpjson/releases/latest/download/mcpjson-linux-amd64 -o mcpjson
+chmod +x mcpjson
+sudo mv mcpjson /usr/local/bin/
 
 # Windows
-# https://github.com/naoto24kawa/mcpconfig/releases から mcpconfig-windows-amd64.exe をダウンロード
+# https://github.com/naoto24kawa/mcpjson/releases から mcpjson-windows-amd64.exe をダウンロード
 ```
 
 ### Go install
@@ -67,7 +67,7 @@ sudo mv mcpconfig /usr/local/bin/
 Go 1.21以上がインストールされている場合：
 
 ```bash
-go install github.com/naoto24kawa/mcpconfig@latest
+go install github.com/naoto24kawa/mcpjson@latest
 ```
 
 ### ソースからビルド
@@ -75,10 +75,10 @@ go install github.com/naoto24kawa/mcpconfig@latest
 開発者向け：
 
 ```bash
-git clone https://github.com/naoto24kawa/mcpconfig.git
-cd mcpconfig
-go build -o mcpconfig .
-sudo mv mcpconfig /usr/local/bin/  # Linux/macOS
+git clone https://github.com/naoto24kawa/mcpjson.git
+cd mcpjson
+go build -o mcpjson .
+sudo mv mcpjson /usr/local/bin/  # Linux/macOS
 ```
 
 ## 使い方
@@ -89,29 +89,29 @@ sudo mv mcpconfig /usr/local/bin/  # Linux/macOS
 
 ```bash
 # 現在利用可能なプロファイルを確認
-mcpconfig list
+mcpjson list
 
 # 現在のMCP設定ファイルの内容を確認
-mcpconfig server show --from ~/.mcp.json
+mcpjson server show --from ~/.mcp.json
 ```
 
 #### プロファイル基本操作
 
 ```bash
 # 1. 空のプロファイルを新規作成
-mcpconfig create my-profile
+mcpjson create my-profile
 
 # 2. 既存のMCP設定ファイルからプロファイルを保存
-mcpconfig save work-profile --from ~/.mcp.json
+mcpjson save work-profile --from ~/.mcp.json
 
 # 3. プロファイルを適用
-mcpconfig apply work-profile --to /path/to/new/.mcp.json
+mcpjson apply work-profile --to /path/to/new/.mcp.json
 
 # 4. プロファイル名を変更
-mcpconfig rename old-profile new-profile
+mcpjson rename old-profile new-profile
 
 # 5. 不要なプロファイルを削除
-mcpconfig delete old-profile
+mcpjson delete old-profile
 ```
 
 ### サーバーテンプレート管理
@@ -120,43 +120,43 @@ mcpconfig delete old-profile
 
 ```bash
 # サーバー一覧を確認
-mcpconfig server list
+mcpjson server list
 
 # 既存のMCP設定ファイルからサーバーを抽出・保存
-mcpconfig server save git-server --server git --from ~/.mcp.json
+mcpjson server save git-server --server git --from ~/.mcp.json
 
 # 手動でシンプルなサーバーを作成
-mcpconfig server save nodejs-server --command "node" --args "server.js,--port,3000"
+mcpjson server save nodejs-server --command "node" --args "server.js,--port,3000"
 
 # 環境変数を含むサーバーを作成
-mcpconfig server save api-server --command "python" --args "app.py" --env "PORT=8080,DEBUG=true"
+mcpjson server save api-server --command "python" --args "app.py" --env "PORT=8080,DEBUG=true"
 ```
 
 #### 高度な環境変数管理
 
 ```bash
 # 環境変数ファイルを使用してサーバーを作成
-mcpconfig server save prod-server --command "node" --args "server.js" --env-file ".env.production"
+mcpjson server save prod-server --command "node" --args "server.js" --env-file ".env.production"
 
 # 環境変数ファイル + 個別指定（個別指定が優先）
-mcpconfig server save dev-server --command "node" --env-file ".env.production" --env "DEBUG=true,PORT=4000"
+mcpjson server save dev-server --command "node" --env-file ".env.production" --env "DEBUG=true,PORT=4000"
 
 # サーバーの部分更新
-mcpconfig server save prod-server --command "python"  # コマンドのみ更新
-mcpconfig server save prod-server --args ""            # 引数を削除
+mcpjson server save prod-server --command "python"  # コマンドのみ更新
+mcpjson server save prod-server --args ""            # 引数を削除
 ```
 
 ### プロファイルとサーバーの連携
 
 ```bash
 # サーバーをMCPファイルに追加
-mcpconfig server add git-server --to ~/.mcp.json
+mcpjson server add git-server --to ~/.mcp.json
 
 # 環境変数をオーバーライドして追加
-mcpconfig server add nodejs-server --to ~/.mcp.json --as my-node --env "PORT=4000,DEBUG=false"
+mcpjson server add nodejs-server --to ~/.mcp.json --as my-node --env "PORT=4000,DEBUG=false"
 
 # MCPファイルからサーバーを削除
-mcpconfig server remove git --from ~/.mcp.json
+mcpjson server remove git --from ~/.mcp.json
 ```
 
 ### 実用的なワークフロー例
@@ -165,37 +165,37 @@ mcpconfig server remove git --from ~/.mcp.json
 
 ```bash
 # 1. 現在の開発環境設定を確認
-mcpconfig server show --from .mcp.json
+mcpjson server show --from .mcp.json
 
 # 2. 開発用プロファイルを作成（バックアップ）
-mcpconfig save dev-profile
+mcpjson save dev-profile
 
 # 3. 本番用プロファイルを作成し、環境変数を調整
-mcpconfig create prod-profile
-mcpconfig server add git-server --env "GIT_REPO_PATH=/prod/repo,GIT_AUTHOR_EMAIL=prod@company.com"
-mcpconfig server add database-server --env "DB_HOST=prod-db.company.com,DB_SSL=true"
+mcpjson create prod-profile
+mcpjson server add git-server --env "GIT_REPO_PATH=/prod/repo,GIT_AUTHOR_EMAIL=prod@company.com"
+mcpjson server add database-server --env "DB_HOST=prod-db.company.com,DB_SSL=true"
 
 # 4. 本番環境に適用
-mcpconfig apply prod-profile --to /etc/claude/.mcp.json
+mcpjson apply prod-profile --to /etc/claude/.mcp.json
 
 # 5. 開発環境に戻すときは
-mcpconfig apply dev-profile
+mcpjson apply dev-profile
 ```
 
 #### チームでの設定共有と個人カスタマイズ
 
 ```bash
 # 1. チーム共通の標準サーバーを作成（チームリーダーが実行）
-mcpconfig server save team-git --command "uvx" --args "mcp-server-git,--repository,PROJECT_ROOT" --env "GIT_AUTHOR_NAME=TEAM_MEMBER"
-mcpconfig server save team-fs --command "uvx" --args "mcp-server-filesystem,--allowed-dirs,PROJECT_ROOT"
+mcpjson server save team-git --command "uvx" --args "mcp-server-git,--repository,PROJECT_ROOT" --env "GIT_AUTHOR_NAME=TEAM_MEMBER"
+mcpjson server save team-fs --command "uvx" --args "mcp-server-filesystem,--allowed-dirs,PROJECT_ROOT"
 
 # 2. 個人用プロファイルを作成（各メンバーが実行）
-mcpconfig create my-profile
-mcpconfig server add team-git --to ~/.mcp.json --env "GIT_AUTHOR_NAME=Alice Johnson,PROJECT_ROOT=/Users/alice/work"
-mcpconfig server add team-fs --to ~/.mcp.json --env "PROJECT_ROOT=/Users/alice/work"
+mcpjson create my-profile
+mcpjson server add team-git --to ~/.mcp.json --env "GIT_AUTHOR_NAME=Alice Johnson,PROJECT_ROOT=/Users/alice/work"
+mcpjson server add team-fs --to ~/.mcp.json --env "PROJECT_ROOT=/Users/alice/work"
 
 # 3. 個人環境に適用
-mcpconfig apply my-profile
+mcpjson apply my-profile
 ```
 
 ## コマンドリファレンス
@@ -203,19 +203,19 @@ mcpconfig apply my-profile
 ### 基本構文
 
 ```bash
-mcpconfig <コマンド> [オプション] [引数]
+mcpjson <コマンド> [オプション] [引数]
 ```
 
 ### プロファイル管理
 
 | コマンド | 説明 | 例 |
 |---------|------|-----|
-| `apply [名前] --to <パス>` | プロファイルを指定パスに適用 | `mcpconfig apply work-profile --to ~/.mcp.json` |
-| `save [名前] --from <パス>` | 現在の設定をプロファイルとして保存 | `mcpconfig save work-profile --from ~/.mcp.json` |
-| `create [名前]` | 新規プロファイルを作成 | `mcpconfig create my-profile` |
-| `list [--detail]` | プロファイル一覧を表示 | `mcpconfig list --detail` |
-| `delete [名前] [--force]` | プロファイルを削除 | `mcpconfig delete old-profile` |
-| `rename [現在名] <新名前>` | プロファイル名を変更 | `mcpconfig rename old new` |
+| `apply [名前] --to <パス>` | プロファイルを指定パスに適用 | `mcpjson apply work-profile --to ~/.mcp.json` |
+| `save [名前] --from <パス>` | 現在の設定をプロファイルとして保存 | `mcpjson save work-profile --from ~/.mcp.json` |
+| `create [名前]` | 新規プロファイルを作成 | `mcpjson create my-profile` |
+| `list [--detail]` | プロファイル一覧を表示 | `mcpjson list --detail` |
+| `delete [名前] [--force]` | プロファイルを削除 | `mcpjson delete old-profile` |
+| `rename [現在名] <新名前>` | プロファイル名を変更 | `mcpjson rename old new` |
 
 ### サーバー管理
 
@@ -223,32 +223,32 @@ mcpconfig <コマンド> [オプション] [引数]
 
 ```bash
 # 設定ファイルから抽出
-mcpconfig server save <サーバー名> --server <サーバー名> --from <設定ファイルパス>
+mcpjson server save <サーバー名> --server <サーバー名> --from <設定ファイルパス>
 
 # 手動作成
-mcpconfig server save <サーバー名> --command <コマンド> [--args <引数>] [--env <環境変数>] [--env-file <ファイル>]
+mcpjson server save <サーバー名> --command <コマンド> [--args <引数>] [--env <環境変数>] [--env-file <ファイル>]
 ```
 
 #### その他のサーバー操作
 
 | コマンド | 説明 | 例 |
 |---------|------|-----|
-| `server list [--detail]` | テンプレート一覧を表示 | `mcpconfig server list --detail` |
-| `server delete <名前>` | テンプレートを削除 | `mcpconfig server delete old-server` |
-| `server rename <現在名> <新名前>` | テンプレート名を変更 | `mcpconfig server rename old new` |
-| `server add <テンプレート> --to <ファイル>` | MCPファイルにサーバー追加 | `mcpconfig server add git-server --to ~/.mcp.json` |
-| `server remove <サーバー名> --from <ファイル>` | MCPファイルからサーバー削除 | `mcpconfig server remove git --from ~/.mcp.json` |
-| `server show --from <ファイル>` | 設定ファイルのサーバー情報を表示 | `mcpconfig server show --from ~/.mcp.json` |
+| `server list [--detail]` | テンプレート一覧を表示 | `mcpjson server list --detail` |
+| `server delete <名前>` | テンプレートを削除 | `mcpjson server delete old-server` |
+| `server rename <現在名> <新名前>` | テンプレート名を変更 | `mcpjson server rename old new` |
+| `server add <テンプレート> --to <ファイル>` | MCPファイルにサーバー追加 | `mcpjson server add git-server --to ~/.mcp.json` |
+| `server remove <サーバー名> --from <ファイル>` | MCPファイルからサーバー削除 | `mcpjson server remove git --from ~/.mcp.json` |
+| `server show --from <ファイル>` | 設定ファイルのサーバー情報を表示 | `mcpjson server show --from ~/.mcp.json` |
 
 ### ユーティリティコマンド
 
 | コマンド | 説明 | 例 |
 |---------|------|-----|
-| `detail <名前>` | プロファイルの詳細をJSON形式で表示 | `mcpconfig detail work-profile` |
-| `detail server <名前>` | サーバーテンプレートの詳細をJSON形式で表示 | `mcpconfig detail server git-server` |
-| `path [名前]` | プロファイルファイルの絶対パスを表示 | `mcpconfig path work-profile` |
-| `server-path <名前>` | サーバーテンプレートファイルの絶対パスを表示 | `mcpconfig server-path git-server` |
-| `reset <all\|profiles\|servers>` | 開発用設定のリセット | `mcpconfig reset all --force` |
+| `detail <名前>` | プロファイルの詳細をJSON形式で表示 | `mcpjson detail work-profile` |
+| `detail server <名前>` | サーバーテンプレートの詳細をJSON形式で表示 | `mcpjson detail server git-server` |
+| `path [名前]` | プロファイルファイルの絶対パスを表示 | `mcpjson path work-profile` |
+| `server-path <名前>` | サーバーテンプレートファイルの絶対パスを表示 | `mcpjson server-path git-server` |
+| `reset <all\|profiles\|servers>` | 開発用設定のリセット | `mcpjson reset all --force` |
 
 ### プロファイル名のデフォルト値
 
@@ -258,8 +258,8 @@ mcpconfig server save <サーバー名> --command <コマンド> [--args <引数
 
 ```bash
 # 以下のコマンドは同等です
-mcpconfig apply --to ~/.mcp.json
-mcpconfig apply default --to ~/.mcp.json
+mcpjson apply --to ~/.mcp.json
+mcpjson apply default --to ~/.mcp.json
 ```
 
 ### オプション詳細
@@ -292,10 +292,10 @@ mcpconfig apply default --to ~/.mcp.json
 
 ## 設定ファイルの場所
 
-mcpconfigは以下のディレクトリに設定を保存します：
+mcpjsonは以下のディレクトリに設定を保存します：
 
 ```
-~/.mcpconfig/
+~/.mcpjson/
 ├── profiles/     # プロファイル（.jsonc形式）
 └── servers/      # サーバーテンプレート（.jsonc形式）
 ```
@@ -316,33 +316,33 @@ mcpconfigは以下のディレクトリに設定を保存します：
 
 ```bash
 # ❌ エラー例
-mcpconfig apply nonexistent-profile
+mcpjson apply nonexistent-profile
 # エラー: プロファイル 'nonexistent-profile' が見つかりません
 
 # ✅ 解決方法
-mcpconfig list  # 利用可能なプロファイルを確認
+mcpjson list  # 利用可能なプロファイルを確認
 ```
 
 #### 環境変数の形式エラー
 
 ```bash
 # ❌ 間違った形式
-mcpconfig server save myserver --env "PORT:3000"  # : を使用
+mcpjson server save myserver --env "PORT:3000"  # : を使用
 
 # ✅ 正しい形式
-mcpconfig server save myserver --env "PORT=3000,DEBUG=true"  # = を使用
+mcpjson server save myserver --env "PORT=3000,DEBUG=true"  # = を使用
 ```
 
 #### 権限不足エラー
 
 ```bash
 # ❌ 権限エラー
-mcpconfig apply work-profile --to /etc/claude/.mcp.json
+mcpjson apply work-profile --to /etc/claude/.mcp.json
 
 # ✅ 解決方法
-sudo mcpconfig apply work-profile --to /etc/claude/.mcp.json
+sudo mcpjson apply work-profile --to /etc/claude/.mcp.json
 # または書き込み可能なパスを使用
-mcpconfig apply work-profile --to ~/claude/.mcp.json
+mcpjson apply work-profile --to ~/claude/.mcp.json
 ```
 
 ## 技術仕様
@@ -357,7 +357,7 @@ mcpconfig apply work-profile --to ~/claude/.mcp.json
 
 ## 開発者向け情報
 
-mcpconfigの開発に参加したい方は、[DEVELOPER.md](DEVELOPER.md)をご覧ください。
+mcpjsonの開発に参加したい方は、[DEVELOPER.md](DEVELOPER.md)をご覧ください。
 
 - 開発環境の構築方法
 - ビルド・テスト手順

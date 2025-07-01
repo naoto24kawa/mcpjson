@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/naoto24kawa/mcpconfig/internal/config"
-	"github.com/naoto24kawa/mcpconfig/internal/utils"
+	"github.com/naoto24kawa/mcpjson/internal/config"
+	"github.com/naoto24kawa/mcpjson/internal/utils"
 )
 
 // TestableExecutor wraps the Execute function for testing
