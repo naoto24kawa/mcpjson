@@ -9,6 +9,7 @@ import (
 	"github.com/naoto24kawa/mcpjson/cmd/create"
 	"github.com/naoto24kawa/mcpjson/cmd/delete"
 	"github.com/naoto24kawa/mcpjson/cmd/detail"
+	"github.com/naoto24kawa/mcpjson/cmd/group"
 	"github.com/naoto24kawa/mcpjson/cmd/list"
 	"github.com/naoto24kawa/mcpjson/cmd/merge"
 	"github.com/naoto24kawa/mcpjson/cmd/path"
@@ -16,7 +17,6 @@ import (
 	"github.com/naoto24kawa/mcpjson/cmd/reset"
 	"github.com/naoto24kawa/mcpjson/cmd/save"
 	"github.com/naoto24kawa/mcpjson/cmd/server"
-	serverpath "github.com/naoto24kawa/mcpjson/cmd/server-path"
 	"github.com/naoto24kawa/mcpjson/internal/config"
 	"github.com/naoto24kawa/mcpjson/internal/utils"
 )
@@ -65,12 +65,12 @@ func (r *CommandRouter) Route(cmd string, args []string) {
 		r.handleDetail(args)
 	case "server":
 		r.handleServer(args)
+	case "group":
+		r.handleGroup(args)
 	case "reset":
 		r.handleReset(args)
 	case "path":
 		r.handlePath(args)
-	case "server-path":
-		r.handleServerPath(args)
 	default:
 		r.handleUnknownCommand(cmd)
 	}
@@ -101,14 +101,6 @@ func (r *CommandRouter) handlePath(args []string) {
 	}
 }
 
-func (r *CommandRouter) handleServerPath(args []string) {
-	serverpath.ServerPathCmd.SetArgs(args)
-	if err := serverpath.ServerPathCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, "エラー:", err)
-		os.Exit(utils.ExitGeneralError)
-	}
-}
-
 func (r *CommandRouter) handleUnknownCommand(cmd string) {
 	fmt.Fprintf(os.Stderr, "エラー: 不明なコマンド '%s'\n", cmd)
 	printUsage()
@@ -133,7 +125,7 @@ func printUsage() {
   path [プロファイル名]                      プロファイルファイルのパスを表示 (デフォルト: %s)
   detail <プロファイル名>                    プロファイルの詳細を表示
   server <サブコマンド>                      MCPサーバー管理
-  server-path <テンプレート名>               サーバーテンプレートファイルのパスを表示
+  group <サブコマンド>                       サーバーグループ管理
   reset <サブコマンド>                       開発用設定のリセット
 
 注意: []で囲まれた引数は省略可能で、省略時はデフォルトプロファイル名 '%s' が使用されます
@@ -166,6 +158,21 @@ func (r *CommandRouter) handleServer(args []string) {
 	}
 
 	server.Execute(cfg, args)
+}
+
+func (r *CommandRouter) handleGroup(args []string) {
+	if len(args) == 0 {
+		group.PrintUsage()
+		os.Exit(0)
+	}
+
+	cfg, err := config.New()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "エラー:", err)
+		os.Exit(utils.ExitEnvironment)
+	}
+
+	group.Execute(cfg, args)
 }
 
 func (r *CommandRouter) handleReset(args []string) {

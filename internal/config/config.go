@@ -10,6 +10,7 @@ const (
 	ConfigDirName      = ".mcpconfig"
 	ProfilesDir        = "profiles"
 	ServersDir         = "servers"
+	GroupsDir          = "groups"
 	DefaultHomeEnv     = "HOME"
 	DefaultMCPConfig   = ".mcp.json"
 	DefaultDirPerm     = 0755
@@ -21,6 +22,7 @@ type Config struct {
 	BaseDir     string
 	ProfilesDir string
 	ServersDir  string
+	GroupsDir   string
 }
 
 func New() (*Config, error) {
@@ -35,6 +37,7 @@ func New() (*Config, error) {
 		BaseDir:     baseDir,
 		ProfilesDir: filepath.Join(baseDir, ProfilesDir),
 		ServersDir:  filepath.Join(baseDir, ServersDir),
+		GroupsDir:   filepath.Join(baseDir, GroupsDir),
 	}
 
 	if err := cfg.ensureDirectories(); err != nil {
@@ -45,7 +48,7 @@ func New() (*Config, error) {
 }
 
 func (c *Config) ensureDirectories() error {
-	dirs := []string{c.BaseDir, c.ProfilesDir, c.ServersDir}
+	dirs := []string{c.BaseDir, c.ProfilesDir, c.ServersDir, c.GroupsDir}
 
 	for _, dir := range dirs {
 		if err := os.MkdirAll(dir, DefaultDirPerm); err != nil {
@@ -62,6 +65,10 @@ func (c *Config) GetProfilePath(name string) string {
 
 func (c *Config) GetServerPath(name string) string {
 	return filepath.Join(c.ServersDir, name+FileExtension)
+}
+
+func (c *Config) GetGroupPath(name string) string {
+	return filepath.Join(c.GroupsDir, name+FileExtension)
 }
 
 // MCPPathResolver handles MCP configuration file path resolution

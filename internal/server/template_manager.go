@@ -159,6 +159,65 @@ func (tm *TemplateManager) Delete(name string, force bool, profileManager Profil
 	return nil
 }
 
+// Copy copies a server template
+func (tm *TemplateManager) Copy(srcName, destName string, force bool) error {
+	if err := tm.validateCopy(srcName, destName, force); err != nil {
+		return err
+	}
+
+	template, err := tm.Load(srcName)
+	if err != nil {
+		return err
+	}
+
+	if err := tm.performCopy(template, destName); err != nil {
+		return err
+	}
+
+	fmt.Printf("サーバーテンプレート '%s' を '%s' にコピーしました\n", srcName, destName)
+	return nil
+}
+
+func (tm *TemplateManager) validateCopy(srcName, destName string, force bool) error {
+	// 空の名前をチェック
+	if srcName == "" {
+		return fmt.Errorf("コピー元のサーバーテンプレート名が指定されていません")
+	}
+	if destName == "" {
+		return fmt.Errorf("コピー先のサーバーテンプレート名が指定されていません")
+	}
+
+	// 同じ名前をチェック
+	if srcName == destName {
+		return fmt.Errorf("コピー元とコピー先が同じ名前です")
+	}
+
+	srcPath := tm.getTemplatePath(srcName)
+	destPath := tm.getTemplatePath(destName)
+
+	if _, err := os.Stat(srcPath); os.IsNotExist(err) {
+		return fmt.Errorf("サーバーテンプレート '%s' が見つかりません", srcName)
+	}
+
+	if _, err := os.Stat(destPath); err == nil && !force {
+		return fmt.Errorf("サーバーテンプレート '%s' は既に存在します\n別の名前を指定するか、--force オプションで上書きしてください", destName)
+	}
+
+	return nil
+}
+
+func (tm *TemplateManager) performCopy(template *ServerTemplate, destName string) error {
+	// 新しいテンプレートを作成（名前と作成日時を更新）
+	newTemplate := &ServerTemplate{
+		Name:         destName,
+		Description:  template.Description,
+		CreatedAt:    time.Now(),
+		ServerConfig: template.ServerConfig,
+	}
+
+	return tm.save(newTemplate)
+}
+
 // Rename renames a server template
 func (tm *TemplateManager) Rename(oldName, newName string, force bool) error {
 	if err := tm.validateRename(oldName, newName, force); err != nil {

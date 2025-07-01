@@ -576,3 +576,277 @@ func TestTemplateManager_save(t *testing.T) {
 		t.Error("Template file was not created")
 	}
 }
+
+func TestTemplateManager_Copy_Success(t *testing.T) {
+	// Arrange
+	tempDir := t.TempDir()
+	manager := NewTemplateManager(tempDir)
+	createTestTemplate(t, manager, testTemplateNameOld)
+
+	// Act
+	err := manager.Copy(testTemplateNameOld, testTemplateNameNew, false)
+
+	// Assert
+	if err != nil {
+		t.Errorf("Copy() failed: %v", err)
+	}
+
+	// 元のテンプレートが存在することを確認
+	exists, _ := manager.Exists(testTemplateNameOld)
+	if !exists {
+		t.Error("Source template should still exist after copy")
+	}
+
+	// コピー先のテンプレートが存在することを確認
+	template, err := manager.Load(testTemplateNameNew)
+	if err != nil {
+		t.Fatalf("Failed to load copied template: %v", err)
+	}
+	if template.Name != testTemplateNameNew {
+		t.Errorf("Copied template name not updated: got %s, want %s", template.Name, testTemplateNameNew)
+	}
+	if template.ServerConfig.Command != testCommand {
+		t.Errorf("Copied template command mismatch: got %s, want %s", template.ServerConfig.Command, testCommand)
+	}
+}
+
+func TestTemplateManager_Copy_SourceNotFound(t *testing.T) {
+	// Arrange
+	tempDir := t.TempDir()
+	manager := NewTemplateManager(tempDir)
+
+	// Act
+	err := manager.Copy("nonexistent-template", testTemplateNameNew, false)
+
+	// Assert
+	if err == nil {
+		t.Error("Copy() expected error for nonexistent source template, got nil")
+	}
+}
+
+func TestTemplateManager_Copy_DestinationExists(t *testing.T) {
+	// Arrange
+	tempDir := t.TempDir()
+	manager := NewTemplateManager(tempDir)
+	createTestTemplate(t, manager, testTemplateNameOld)
+	createTestTemplate(t, manager, testTemplateNameNew)
+
+	// Act
+	err := manager.Copy(testTemplateNameOld, testTemplateNameNew, false)
+
+	// Assert
+	if err == nil {
+		t.Error("Copy() expected error when destination exists without force, got nil")
+	}
+
+	// 元のテンプレートが変更されていないことを確認
+	template, err := manager.Load(testTemplateNameOld)
+	if err != nil {
+		t.Fatalf("Failed to load source template after failed copy: %v", err)
+	}
+	if template.Name != testTemplateNameOld {
+		t.Error("Source template was unexpectedly modified")
+	}
+}
+
+func TestTemplateManager_Copy_ForceOverwrite(t *testing.T) {
+	// Arrange
+	tempDir := t.TempDir()
+	manager := NewTemplateManager(tempDir)
+	createTestTemplate(t, manager, testTemplateNameOld)
+
+	// コピー先に異なる設定のテンプレートを作成
+	err := manager.SaveFromConfig(testTemplateNameNew, MCPServer{
+		Command: "node",
+		Args:    []string{"different.js"},
+		Env:     map[string]string{"DIFFERENT": "value"},
+	})
+	if err != nil {
+		t.Fatalf("Failed to create destination template: %v", err)
+	}
+
+	// Act
+	err = manager.Copy(testTemplateNameOld, testTemplateNameNew, true)
+
+	// Assert
+	if err != nil {
+		t.Errorf("Copy() with force failed: %v", err)
+	}
+
+	// 元のテンプレートが存在することを確認
+	exists, _ := manager.Exists(testTemplateNameOld)
+	if !exists {
+		t.Error("Source template should still exist after copy")
+	}
+
+	// コピー先のテンプレートが上書きされているか確認
+	template, err := manager.Load(testTemplateNameNew)
+	if err != nil {
+		t.Fatalf("Failed to load copied template: %v", err)
+	}
+	if template.Name != testTemplateNameNew {
+		t.Errorf("Copied template name not updated: got %s, want %s", template.Name, testTemplateNameNew)
+	}
+	if template.ServerConfig.Command != testCommand {
+		t.Errorf("Template was not overwritten: got command %s, want %s", template.ServerConfig.Command, testCommand)
+	}
+}
+
+func TestTemplateManager_Copy_SameName(t *testing.T) {
+	// Arrange
+	tempDir := t.TempDir()
+	manager := NewTemplateManager(tempDir)
+	createTestTemplate(t, manager, testTemplateName)
+
+	// Act
+	err := manager.Copy(testTemplateName, testTemplateName, false)
+
+	// Assert
+	if err == nil {
+		t.Error("Copy() expected error when source and destination are the same, got nil")
+	}
+}
+
+func TestTemplateManager_Copy_CreatedAtUpdate(t *testing.T) {
+	// Arrange
+	tempDir := t.TempDir()
+	manager := NewTemplateManager(tempDir)
+	createTestTemplate(t, manager, testTemplateNameOld)
+
+	// 元のテンプレートのCreatedAtを取得
+	originalTemplate, err := manager.Load(testTemplateNameOld)
+	if err != nil {
+		t.Fatalf("Failed to load original template: %v", err)
+	}
+
+	// 少し待機してからコピー
+	time.Sleep(time.Millisecond * 10)
+
+	// Act
+	err = manager.Copy(testTemplateNameOld, testTemplateNameNew, false)
+
+	// Assert
+	if err != nil {
+		t.Errorf("Copy() failed: %v", err)
+	}
+
+	// コピーされたテンプレートのCreatedAtが更新されているか確認
+	copiedTemplate, err := manager.Load(testTemplateNameNew)
+	if err != nil {
+		t.Fatalf("Failed to load copied template: %v", err)
+	}
+
+	if !copiedTemplate.CreatedAt.After(originalTemplate.CreatedAt) {
+		t.Error("Copied template CreatedAt should be newer than original")
+	}
+}
+
+func TestTemplateManager_Copy_EmptySourceName(t *testing.T) {
+	// Arrange
+	tempDir := t.TempDir()
+	manager := NewTemplateManager(tempDir)
+
+	// Act
+	err := manager.Copy("", testTemplateNameNew, false)
+
+	// Assert
+	if err == nil {
+		t.Error("Copy() expected error for empty source name, got nil")
+	}
+}
+
+func TestTemplateManager_Copy_EmptyDestinationName(t *testing.T) {
+	// Arrange
+	tempDir := t.TempDir()
+	manager := NewTemplateManager(tempDir)
+	createTestTemplate(t, manager, testTemplateName)
+
+	// Act
+	err := manager.Copy(testTemplateName, "", false)
+
+	// Assert
+	if err == nil {
+		t.Error("Copy() expected error for empty destination name, got nil")
+	}
+}
+
+func TestTemplateManager_Copy_PreservesAllFields(t *testing.T) {
+	// Arrange
+	tempDir := t.TempDir()
+	manager := NewTemplateManager(tempDir)
+
+	// より複雑なテンプレートを作成
+	testDescription := "Test template description"
+	complexServer := MCPServer{
+		Command: testCommand,
+		Args:    []string{"test.py", "--verbose", "--config", "test.json"},
+		Env: map[string]string{
+			"TEST_ENV":     "value",
+			"ANOTHER_ENV":  "another_value",
+			"COMPLEX_PATH": "/path/to/complex/dir",
+		},
+	}
+
+	err := manager.SaveFromConfig(testTemplateNameOld, complexServer)
+	if err != nil {
+		t.Fatalf("Failed to create complex template: %v", err)
+	}
+
+	// 手動でdescriptionを追加（SaveFromConfigでは追加されないため）
+	originalTemplate, err := manager.Load(testTemplateNameOld)
+	if err != nil {
+		t.Fatalf("Failed to load template for description update: %v", err)
+	}
+	originalTemplate.Description = &testDescription
+	err = manager.save(originalTemplate)
+	if err != nil {
+		t.Fatalf("Failed to save template with description: %v", err)
+	}
+
+	// Act
+	err = manager.Copy(testTemplateNameOld, testTemplateNameNew, false)
+
+	// Assert
+	if err != nil {
+		t.Errorf("Copy() failed: %v", err)
+	}
+
+	// コピーされたテンプレートのすべてのフィールドを確認
+	copiedTemplate, err := manager.Load(testTemplateNameNew)
+	if err != nil {
+		t.Fatalf("Failed to load copied template: %v", err)
+	}
+
+	// Name以外のすべてのフィールドが正しくコピーされているか確認
+	if copiedTemplate.Name != testTemplateNameNew {
+		t.Errorf("Name not updated: got %s, want %s", copiedTemplate.Name, testTemplateNameNew)
+	}
+
+	if copiedTemplate.Description == nil || *copiedTemplate.Description != testDescription {
+		t.Errorf("Description not copied correctly: got %v, want %s", copiedTemplate.Description, testDescription)
+	}
+
+	if copiedTemplate.ServerConfig.Command != complexServer.Command {
+		t.Errorf("Command not copied: got %s, want %s", copiedTemplate.ServerConfig.Command, complexServer.Command)
+	}
+
+	if len(copiedTemplate.ServerConfig.Args) != len(complexServer.Args) {
+		t.Errorf("Args length mismatch: got %d, want %d", len(copiedTemplate.ServerConfig.Args), len(complexServer.Args))
+	}
+
+	for i, arg := range complexServer.Args {
+		if copiedTemplate.ServerConfig.Args[i] != arg {
+			t.Errorf("Args[%d] mismatch: got %s, want %s", i, copiedTemplate.ServerConfig.Args[i], arg)
+		}
+	}
+
+	if len(copiedTemplate.ServerConfig.Env) != len(complexServer.Env) {
+		t.Errorf("Env length mismatch: got %d, want %d", len(copiedTemplate.ServerConfig.Env), len(complexServer.Env))
+	}
+
+	for key, value := range complexServer.Env {
+		if copiedTemplate.ServerConfig.Env[key] != value {
+			t.Errorf("Env[%s] mismatch: got %s, want %s", key, copiedTemplate.ServerConfig.Env[key], value)
+		}
+	}
+}

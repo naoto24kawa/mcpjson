@@ -34,14 +34,14 @@ func createTestProfileWithServers(t *testing.T, cfg *config.Config, name string,
 	t.Helper()
 
 	profileManager := profile.NewManager(cfg.ProfilesDir)
-	
+
 	// Create profile with some server references
 	testProfile := &profile.Profile{
 		Name:        name,
 		Description: "Test profile with servers",
 		Servers:     make([]profile.ServerRef, serverCount),
 	}
-	
+
 	// Add mock server references
 	for i := 0; i < serverCount; i++ {
 		testProfile.Servers[i] = profile.ServerRef{
@@ -60,7 +60,7 @@ func createTestProfileWithServers(t *testing.T, cfg *config.Config, name string,
 	if err != nil {
 		t.Fatalf("Failed to load test profile: %v", err)
 	}
-	
+
 	loadedProfile.Servers = testProfile.Servers
 	profilePath := filepath.Join(cfg.ProfilesDir, name+config.FileExtension)
 	if err := utils.SaveJSON(profilePath, loadedProfile); err != nil {
@@ -245,23 +245,23 @@ func TestExecute_DuplicateServers(t *testing.T) {
 
 	// Create profiles with overlapping server names
 	profileManager := profile.NewManager(cfg.ProfilesDir)
-	
+
 	// Create profile1 with server "common-server"
 	err := profileManager.Create("profile1", "Test profile 1")
 	if err != nil {
 		t.Fatalf("Failed to create profile1: %v", err)
 	}
-	
+
 	profile1, err := profileManager.Load("profile1")
 	if err != nil {
 		t.Fatalf("Failed to load profile1: %v", err)
 	}
-	
+
 	profile1.Servers = []profile.ServerRef{
 		{Name: "common-server", Template: "template1"},
 		{Name: "unique-server1", Template: "template1"},
 	}
-	
+
 	profile1Path := filepath.Join(cfg.ProfilesDir, "profile1"+config.FileExtension)
 	if err := utils.SaveJSON(profile1Path, profile1); err != nil {
 		t.Fatalf("Failed to save profile1: %v", err)
@@ -272,17 +272,17 @@ func TestExecute_DuplicateServers(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create profile2: %v", err)
 	}
-	
+
 	profile2, err := profileManager.Load("profile2")
 	if err != nil {
 		t.Fatalf("Failed to load profile2: %v", err)
 	}
-	
+
 	profile2.Servers = []profile.ServerRef{
 		{Name: "common-server", Template: "template2"}, // Same name, different template
 		{Name: "unique-server2", Template: "template2"},
 	}
-	
+
 	profile2Path := filepath.Join(cfg.ProfilesDir, "profile2"+config.FileExtension)
 	if err := utils.SaveJSON(profile2Path, profile2); err != nil {
 		t.Fatalf("Failed to save profile2: %v", err)

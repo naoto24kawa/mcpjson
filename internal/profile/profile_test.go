@@ -1035,14 +1035,14 @@ func TestManager_Copy(t *testing.T) {
 
 func TestManager_Merge(t *testing.T) {
 	tests := []struct {
-		name          string
-		destName      string
-		sourceNames   []string
-		force         bool
-		setupSources  []bool
-		setupDest     bool
-		expectError   bool
-		errorContains string
+		name            string
+		destName        string
+		sourceNames     []string
+		force           bool
+		setupSources    []bool
+		setupDest       bool
+		expectError     bool
+		errorContains   string
 		expectedServers int
 	}{
 		{
